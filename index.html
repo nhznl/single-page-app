@@ -64,6 +64,25 @@
           </div>
         </article>
       </section>
+
+      <section class="deck-summary" aria-label="Deck information">
+        <label class="deck-stat">
+          <span>Total Decks</span>
+          <input id="total-decks" type="number" min="1" step="1" inputmode="numeric" value="8" />
+        </label>
+        <div class="deck-stat">
+          <span>Decks Remaining</span>
+          <output id="decks-remaining" aria-live="polite">8.00</output>
+        </div>
+        <div class="deck-stat">
+          <span>D True Count</span>
+          <output id="dragon-true-count" aria-live="polite">0.00</output>
+        </div>
+        <div class="deck-stat">
+          <span>P True Count</span>
+          <output id="panda-true-count" aria-live="polite">0.00</output>
+        </div>
+      </section>
     </main>
     <script src="app.js"></script>
   </body>

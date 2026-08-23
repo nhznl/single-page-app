@@ -1,9 +1,11 @@
 const storageKey = "card-tracker-v1";
 const historyKey = "card-tracker-history-v2";
 const bucketStorageKey = "card-tracker-bucket-counts-v2";
+const totalDecksStorageKey = "card-tracker-total-decks-v1";
 const totals = JSON.parse(localStorage.getItem(storageKey) || "{\"dragon\":0,\"panda\":0,\"deck\":0}");
 const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
 const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"common-45\":0,\"common-67\":0,\"common-8\":0,\"common-9\":0,\"panda-plus-one\":0,\"panda-three\":0}");
+let totalDecks = Number(localStorage.getItem(totalDecksStorageKey) || 8);
 
 const commonRules = {
   "common-45": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -2 }],
@@ -60,6 +62,23 @@ const cardBuckets = {
   A: ["panda-plus-one"]
 };
 
+function setOutput(selector, value) {
+  const output = document.querySelector(selector);
+  output.value = value;
+  output.textContent = value;
+}
+
+function renderDeckStats() {
+  const decksRemaining = totalDecks - totals.deck / 52;
+  const decksRemainingText = decksRemaining.toFixed(2);
+  const dTrueCount = decksRemaining === 0 ? "—" : (totals.dragon / decksRemaining).toFixed(2);
+  const pTrueCount = decksRemaining === 0 ? "—" : (totals.panda / decksRemaining).toFixed(2);
+
+  setOutput("#decks-remaining", decksRemainingText);
+  setOutput("#dragon-true-count", dTrueCount);
+  setOutput("#panda-true-count", pTrueCount);
+}
+
 function render() {
   for (const [counter, total] of Object.entries(totals)) {
     document.querySelector(`#${counter}-total`).value = total;
@@ -71,6 +90,9 @@ function render() {
   localStorage.setItem(storageKey, JSON.stringify(totals));
   localStorage.setItem(historyKey, JSON.stringify(history));
   localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
+  localStorage.setItem(totalDecksStorageKey, String(totalDecks));
+  document.querySelector("#total-decks").value = totalDecks;
+  renderDeckStats();
   document.querySelector("#undo").disabled = history.length === 0;
 }
 
@@ -118,6 +140,14 @@ document.querySelector("#reset").addEventListener("click", () => {
   Object.keys(bucketCounts).forEach((key) => { bucketCounts[key] = 0; });
   history.length = 0;
   render();
+});
+
+document.querySelector("#total-decks").addEventListener("input", (event) => {
+  const updatedTotal = Number(event.target.value);
+  if (!Number.isFinite(updatedTotal) || updatedTotal < 1) return;
+  totalDecks = updatedTotal;
+  localStorage.setItem(totalDecksStorageKey, String(totalDecks));
+  renderDeckStats();
 });
 
 const voiceButton = document.querySelector("#voice");

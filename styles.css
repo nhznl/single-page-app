@@ -23,6 +23,10 @@ output { color: #f4ce67; font-size: 3.25rem; font-weight: 800; line-height: .85;
 .change { font-size: 1.65rem; font-weight: 900; letter-spacing: -.05em; }.positive { border-color: #356b55; background: #1d4537; }.negative { border-color: #8a4b50; background: #502b31; }.neutral { border-color: #856b38; background: #4b3b1f; }
 .score-button:active { transform: scale(.97); filter: brightness(1.2); }.score-button:focus-visible, .reset:focus-visible, .undo:focus-visible, .voice:focus-visible { outline: 3px solid #f4ce67; outline-offset: 3px; }
 .voice-status { min-height: 1.5rem; max-width: 720px; margin: -1.25rem auto 1rem; padding: .35rem .55rem; border: 1px solid #385648; border-radius: .55rem; background: rgb(16 35 29 / .72); color: #cbd8d0; text-align: center; font-size: .8rem; }
+.deck-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; padding: .8rem; border: 1px solid #45695b; border-radius: 1rem; background: rgb(16 35 29 / .88); }
+.deck-stat { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: #cbd8d0; font-size: .85rem; font-weight: 700; }
+.deck-stat input { width: 4.5rem; padding: .4rem; border: 1px solid #789287; border-radius: .5rem; background: #172a23; color: #f8f4e9; font: inherit; font-size: 1.05rem; font-weight: 800; text-align: center; }
+.deck-stat output { color: #f4ce67; font-size: 1.35rem; font-weight: 900; letter-spacing: -.04em; }
 @media (max-width: 760px) {
   .app-shell { padding: max(.5rem, env(safe-area-inset-top)) .5rem max(.5rem, env(safe-area-inset-bottom)); }
   header { gap: .4rem; margin-bottom: .45rem; }
@@ -41,4 +45,8 @@ output { color: #f4ce67; font-size: 3.25rem; font-weight: 800; line-height: .85;
   .bucket-count { right: .3rem; bottom: .25rem; min-width: 1.25rem; height: 1.25rem; font-size: .64rem; }
   .change { font-size: 1.5rem; }
   .voice-status { min-height: 1.35rem; margin: 0 0 .45rem; padding: .25rem .4rem; font-size: .7rem; }
+  .deck-summary { gap: .4rem; margin-top: .4rem; padding: .5rem; border-radius: .75rem; }
+  .deck-stat { gap: .35rem; font-size: .7rem; }
+  .deck-stat input { width: 3.5rem; padding: .3rem; font-size: .9rem; }
+  .deck-stat output { font-size: 1.05rem; }
 }
