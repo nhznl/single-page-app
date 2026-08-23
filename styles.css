@@ -25,10 +25,8 @@ output { color: #f4ce67; font-size: 3.25rem; font-weight: 800; line-height: .85;
   .tracker { display: grid; grid-template-columns: 4.25rem minmax(0, 1fr); min-height: auto; padding: .45rem; border-radius: .75rem; }
   .tracker-heading { align-items: center; justify-content: center; padding: 0 .35rem 0 0; border-bottom: 0; border-right: 1px solid #385648; }
   output { font-size: 2.2rem; }
-  .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; margin: 0; padding-left: .45rem; }
-  .panda-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .deck .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .score-button { min-height: 52px; gap: .18rem; padding: .3rem .2rem; border-radius: .6rem; font-size: .68rem; }
-  .change { font-size: 1.25rem; }
+  .controls, .panda-controls, .deck .controls { grid-template-columns: 1fr; gap: .35rem; margin: 0; padding-left: .45rem; }
+  .score-button { min-height: 64px; gap: .22rem; padding: .4rem; border-radius: .6rem; font-size: .78rem; }
+  .change { font-size: 1.5rem; }
   .hint { margin: .45rem 0 0; font-size: .7rem; }
 }
