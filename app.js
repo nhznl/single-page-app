@@ -1,7 +1,9 @@
 const storageKey = "card-tracker-v1";
 const historyKey = "card-tracker-history-v1";
+const bucketStorageKey = "card-tracker-bucket-counts-v1";
 const totals = JSON.parse(localStorage.getItem(storageKey) || "{\"dragon\":0,\"panda\":0,\"deck\":0}");
 const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"dragon-low\":0,\"dragon-high\":0,\"panda-plus-one\":0,\"panda-minus-two\":0,\"panda-minus-one\":0,\"panda-plus-four\":0}");
 
 const cardRules = {
   "2": [{ counter: "panda", change: 1 }],
@@ -35,19 +37,40 @@ const cardAliases = {
   A: ["ace"]
 };
 
+const cardBuckets = {
+  "2": ["panda-plus-one"],
+  "3": ["panda-minus-two"],
+  "4": ["dragon-low", "panda-minus-two"],
+  "5": ["dragon-low", "panda-minus-two"],
+  "6": ["dragon-low", "panda-minus-one"],
+  "7": ["dragon-low", "panda-minus-one"],
+  "8": ["dragon-high", "panda-minus-two"],
+  "9": ["dragon-high", "panda-plus-four"],
+  "10": ["panda-plus-one"],
+  J: ["panda-plus-one"],
+  Q: ["panda-plus-one"],
+  K: ["panda-plus-one"],
+  A: ["panda-plus-one"]
+};
+
 function render() {
   for (const [counter, total] of Object.entries(totals)) {
     document.querySelector(`#${counter}-total`).value = total;
     document.querySelector(`#${counter}-total`).textContent = total;
   }
+  document.querySelectorAll("[data-bucket]").forEach((button) => {
+    button.querySelector(".bucket-count").textContent = bucketCounts[button.dataset.bucket] || 0;
+  });
   localStorage.setItem(storageKey, JSON.stringify(totals));
   localStorage.setItem(historyKey, JSON.stringify(history));
+  localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
   document.querySelector("#undo").disabled = history.length === 0;
 }
 
-function applyChanges(changes) {
+function applyChanges(changes, buckets = []) {
   changes.forEach(({ counter, change }) => { totals[counter] += change; });
-  history.push({ changes });
+  buckets.forEach((bucket) => { bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1; });
+  history.push({ changes, buckets });
   render();
 }
 
@@ -63,7 +86,8 @@ function signedNumber(value) {
 document.querySelectorAll("[data-counter]").forEach((button) => {
   button.addEventListener("click", () => {
     const change = Number(button.dataset.change);
-    applyChanges([{ counter: button.dataset.counter, change }]);
+    const buckets = button.dataset.bucket ? [button.dataset.bucket] : [];
+    applyChanges([{ counter: button.dataset.counter, change }], buckets);
   });
 });
 
@@ -72,11 +96,13 @@ document.querySelector("#undo").addEventListener("click", () => {
   if (!lastAction) return;
   const changes = lastAction.changes || [{ counter: lastAction.counter, change: lastAction.change }];
   changes.forEach(({ counter, change }) => { totals[counter] -= change; });
+  (lastAction.buckets || []).forEach((bucket) => { bucketCounts[bucket] = Math.max(0, (bucketCounts[bucket] || 0) - 1); });
   render();
 });
 
 document.querySelector("#reset").addEventListener("click", () => {
   Object.keys(totals).forEach((key) => { totals[key] = 0; });
+  Object.keys(bucketCounts).forEach((key) => { bucketCounts[key] = 0; });
   history.length = 0;
   render();
 });
@@ -167,7 +193,7 @@ if (!SpeechRecognition) {
       }
 
       const changes = cardRules[card];
-      applyChanges(changes);
+      applyChanges(changes, cardBuckets[card]);
       const summary = changes.map(({ counter, change }) => `${counter === "dragon" ? "Dragon" : "Panda"} ${signedNumber(change)}`).join(", ");
       lastRecognition = `Recognized ${card}: ${summary}`;
       showVoiceState("Listening…");

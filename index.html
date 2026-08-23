@@ -27,11 +27,11 @@
             <output id="dragon-total" aria-live="polite">0</output>
           </div>
           <div class="controls">
-            <button class="score-button negative" type="button" data-counter="dragon" data-change="-1">
-              <span class="change">−1</span><span>4 · 5 · 6 · 7</span>
+            <button class="score-button negative" type="button" data-counter="dragon" data-change="-1" data-bucket="dragon-low">
+              <span class="change">−1</span><span>4 · 5 · 6 · 7</span><span class="bucket-count">0</span>
             </button>
-            <button class="score-button positive" type="button" data-counter="dragon" data-change="2">
-              <span class="change">+2</span><span>8 · 9</span>
+            <button class="score-button positive" type="button" data-counter="dragon" data-change="2" data-bucket="dragon-high">
+              <span class="change">+2</span><span>8 · 9</span><span class="bucket-count">0</span>
             </button>
           </div>
         </article>
@@ -41,10 +41,10 @@
             <output id="panda-total" aria-live="polite">0</output>
           </div>
           <div class="controls panda-controls">
-            <button class="score-button positive" type="button" data-counter="panda" data-change="1"><span class="change">+1</span><span>10 · J · Q · K · A · 2</span></button>
-            <button class="score-button negative" type="button" data-counter="panda" data-change="-2"><span class="change">−2</span><span>3 · 4 · 5 · 8</span></button>
-            <button class="score-button negative" type="button" data-counter="panda" data-change="-1"><span class="change">−1</span><span>6 · 7</span></button>
-            <button class="score-button positive" type="button" data-counter="panda" data-change="4"><span class="change">+4</span><span>9</span></button>
+            <button class="score-button positive" type="button" data-counter="panda" data-change="1" data-bucket="panda-plus-one"><span class="change">+1</span><span>10 · J · Q · K · A · 2</span><span class="bucket-count">0</span></button>
+            <button class="score-button negative" type="button" data-counter="panda" data-change="-2" data-bucket="panda-minus-two"><span class="change">−2</span><span>3 · 4 · 5 · 8</span><span class="bucket-count">0</span></button>
+            <button class="score-button negative" type="button" data-counter="panda" data-change="-1" data-bucket="panda-minus-one"><span class="change">−1</span><span>6 · 7</span><span class="bucket-count">0</span></button>
+            <button class="score-button positive" type="button" data-counter="panda" data-change="4" data-bucket="panda-plus-four"><span class="change">+4</span><span>9</span><span class="bucket-count">0</span></button>
           </div>
         </article>
 
