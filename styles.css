@@ -9,6 +9,10 @@ h1, h2 { margin: 0; letter-spacing: -.035em; } h1 { font-size: clamp(2rem, 8vw, 
 .reset, .undo, .voice { padding: .55rem .75rem; border: 1px solid #789287; border-radius: .7rem; background: transparent; color: #e7e3d8; font-size: .85rem; }
 .reset:active, .undo:active, .voice:active { background: #314b41; }.undo:disabled, .voice:disabled { cursor: default; opacity: .4; }
 .voice.listening { border-color: #52a77f; background: #1d4537; color: #fff; }
+.common-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1rem; padding: .85rem; border: 1px solid #45695b; border-radius: 1rem; background: rgb(16 35 29 / .88); }
+.common-controls .score-button { min-height: 84px; }
+.shared { border-color: #596c9e; background: #2d3961; }
+.shared-ranks { font-size: 1.35rem; font-weight: 900; }
 .trackers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .tracker { min-height: 370px; padding: 1.15rem; border: 1px solid #45695b; border-radius: 1.15rem; background: rgb(16 35 29 / .88); box-shadow: 0 .75rem 2rem rgb(0 0 0 / .18); }
 .tracker-heading { display: flex; align-items: start; justify-content: space-between; gap: .75rem; padding-bottom: 1rem; border-bottom: 1px solid #385648; }
@@ -23,9 +27,14 @@ output { color: #f4ce67; font-size: 3.25rem; font-weight: 800; line-height: .85;
   .app-shell { padding: max(.5rem, env(safe-area-inset-top)) .5rem max(.5rem, env(safe-area-inset-bottom)); }
   header { gap: .4rem; margin-bottom: .45rem; }
   .reset, .undo, .voice { padding: .4rem .55rem; font-size: .72rem; }
+  .common-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; margin-bottom: .4rem; padding: .4rem; border-radius: .75rem; }
+  .common-controls .score-button { min-height: 64px; }
+  .shared-ranks { font-size: 1.2rem; }
   .trackers { grid-template-columns: 1fr; gap: .4rem; }
   .tracker { display: grid; grid-template-columns: 4.25rem minmax(0, 1fr); min-height: auto; padding: .45rem; border-radius: .75rem; }
   .tracker-heading { align-items: center; justify-content: center; padding: 0 .35rem 0 0; border-bottom: 0; border-right: 1px solid #385648; }
+  .tracker.total-only { grid-template-columns: 1fr; }
+  .tracker.total-only .tracker-heading { padding: .35rem; border-right: 0; }
   output { font-size: 2.2rem; }
   .controls, .panda-controls, .deck .controls { grid-template-columns: 1fr; gap: .35rem; margin: 0; padding-left: .45rem; }
   .score-button { min-height: 64px; gap: .22rem; padding: .4rem; border-radius: .6rem; font-size: .78rem; }

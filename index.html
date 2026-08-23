@@ -21,30 +21,35 @@
       </header>
       <p class="voice-status" id="voice-status" aria-live="polite">Tap Voice to start listening.</p>
 
+      <section class="common-controls" aria-label="Shared D and P card buckets">
+        <button class="score-button shared" type="button" data-rule="common-45" data-bucket="common-45">
+          <span class="shared-ranks">4 · 5</span><span>D −1 · P −2</span><span class="bucket-count">0</span>
+        </button>
+        <button class="score-button shared" type="button" data-rule="common-67" data-bucket="common-67">
+          <span class="shared-ranks">6 · 7</span><span>D −1 · P −1</span><span class="bucket-count">0</span>
+        </button>
+        <button class="score-button shared" type="button" data-rule="common-8" data-bucket="common-8">
+          <span class="shared-ranks">8</span><span>D +2 · P −2</span><span class="bucket-count">0</span>
+        </button>
+        <button class="score-button shared" type="button" data-rule="common-9" data-bucket="common-9">
+          <span class="shared-ranks">9</span><span>D +2 · P +4</span><span class="bucket-count">0</span>
+        </button>
+      </section>
+
       <section class="trackers" aria-label="Card counters">
-        <article class="tracker dragon">
+        <article class="tracker dragon total-only">
           <div class="tracker-heading">
-            <output id="dragon-total" aria-live="polite">0</output>
-          </div>
-          <div class="controls">
-            <button class="score-button negative" type="button" data-counter="dragon" data-change="-1" data-bucket="dragon-low">
-              <span class="change">−1</span><span>4 · 5 · 6 · 7</span><span class="bucket-count">0</span>
-            </button>
-            <button class="score-button positive" type="button" data-counter="dragon" data-change="2" data-bucket="dragon-high">
-              <span class="change">+2</span><span>8 · 9</span><span class="bucket-count">0</span>
-            </button>
+            <output id="dragon-total" aria-label="D total" aria-live="polite">0</output>
           </div>
         </article>
 
         <article class="tracker panda">
           <div class="tracker-heading">
-            <output id="panda-total" aria-live="polite">0</output>
+            <output id="panda-total" aria-label="P total" aria-live="polite">0</output>
           </div>
           <div class="controls panda-controls">
             <button class="score-button positive" type="button" data-counter="panda" data-change="1" data-bucket="panda-plus-one"><span class="change">+1</span><span>10 · J · Q · K · A · 2</span><span class="bucket-count">0</span></button>
-            <button class="score-button negative" type="button" data-counter="panda" data-change="-2" data-bucket="panda-minus-two"><span class="change">−2</span><span>3 · 4 · 5 · 8</span><span class="bucket-count">0</span></button>
-            <button class="score-button negative" type="button" data-counter="panda" data-change="-1" data-bucket="panda-minus-one"><span class="change">−1</span><span>6 · 7</span><span class="bucket-count">0</span></button>
-            <button class="score-button positive" type="button" data-counter="panda" data-change="4" data-bucket="panda-plus-four"><span class="change">+4</span><span>9</span><span class="bucket-count">0</span></button>
+            <button class="score-button negative" type="button" data-counter="panda" data-change="-2" data-bucket="panda-three"><span class="change">−2</span><span>3</span><span class="bucket-count">0</span></button>
           </div>
         </article>
 

@@ -1,9 +1,16 @@
 const storageKey = "card-tracker-v1";
-const historyKey = "card-tracker-history-v1";
-const bucketStorageKey = "card-tracker-bucket-counts-v1";
+const historyKey = "card-tracker-history-v2";
+const bucketStorageKey = "card-tracker-bucket-counts-v2";
 const totals = JSON.parse(localStorage.getItem(storageKey) || "{\"dragon\":0,\"panda\":0,\"deck\":0}");
 const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
-const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"dragon-low\":0,\"dragon-high\":0,\"panda-plus-one\":0,\"panda-minus-two\":0,\"panda-minus-one\":0,\"panda-plus-four\":0}");
+const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"common-45\":0,\"common-67\":0,\"common-8\":0,\"common-9\":0,\"panda-plus-one\":0,\"panda-three\":0}");
+
+const commonRules = {
+  "common-45": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -2 }],
+  "common-67": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -1 }],
+  "common-8": [{ counter: "dragon", change: 2 }, { counter: "panda", change: -2 }],
+  "common-9": [{ counter: "dragon", change: 2 }, { counter: "panda", change: 4 }]
+};
 
 const cardRules = {
   "2": [{ counter: "panda", change: 1 }],
@@ -39,13 +46,13 @@ const cardAliases = {
 
 const cardBuckets = {
   "2": ["panda-plus-one"],
-  "3": ["panda-minus-two"],
-  "4": ["dragon-low", "panda-minus-two"],
-  "5": ["dragon-low", "panda-minus-two"],
-  "6": ["dragon-low", "panda-minus-one"],
-  "7": ["dragon-low", "panda-minus-one"],
-  "8": ["dragon-high", "panda-minus-two"],
-  "9": ["dragon-high", "panda-plus-four"],
+  "3": ["panda-three"],
+  "4": ["common-45"],
+  "5": ["common-45"],
+  "6": ["common-67"],
+  "7": ["common-67"],
+  "8": ["common-8"],
+  "9": ["common-9"],
   "10": ["panda-plus-one"],
   J: ["panda-plus-one"],
   Q: ["panda-plus-one"],
@@ -88,6 +95,12 @@ document.querySelectorAll("[data-counter]").forEach((button) => {
     const change = Number(button.dataset.change);
     const buckets = button.dataset.bucket ? [button.dataset.bucket] : [];
     applyChanges([{ counter: button.dataset.counter, change }], buckets);
+  });
+});
+
+document.querySelectorAll("[data-rule]").forEach((button) => {
+  button.addEventListener("click", () => {
+    applyChanges(commonRules[button.dataset.rule], [button.dataset.bucket]);
   });
 });
 
@@ -194,7 +207,7 @@ if (!SpeechRecognition) {
 
       const changes = cardRules[card];
       applyChanges(changes, cardBuckets[card]);
-      const summary = changes.map(({ counter, change }) => `${counter === "dragon" ? "Dragon" : "Panda"} ${signedNumber(change)}`).join(", ");
+      const summary = changes.map(({ counter, change }) => `${counter === "dragon" ? "D" : "P"} ${signedNumber(change)}`).join(", ");
       lastRecognition = `Recognized ${card}: ${summary}`;
       showVoiceState("Listening…");
     }
