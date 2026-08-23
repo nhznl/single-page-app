@@ -95,12 +95,21 @@ if (!SpeechRecognition) {
   recognition.interimResults = false;
   recognition.maxAlternatives = 3;
 
-  voiceButton.addEventListener("click", () => {
+  voiceButton.addEventListener("click", async () => {
     voiceStatus.textContent = "Listening…";
     try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error("microphone-unavailable");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
       recognition.start();
-    } catch {
-      voiceStatus.textContent = "Already listening…";
+    } catch (error) {
+      if (error.name === "NotAllowedError" || error.name === "SecurityError") {
+        voiceStatus.textContent = "Microphone access was denied. Allow it in Safari website settings.";
+      } else if (error.name === "InvalidStateError") {
+        voiceStatus.textContent = "Already listening…";
+      } else {
+        voiceStatus.textContent = "Microphone is unavailable on this device.";
+      }
     }
   });
 
