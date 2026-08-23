@@ -1,4 +1,4 @@
-# Card Tracker
+# Test App
 
 A small installable web app for tracking Dragon 7, Panda 8, and cards-dealt totals.
 
