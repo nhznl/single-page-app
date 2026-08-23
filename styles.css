@@ -17,7 +17,7 @@ output { color: #f4ce67; font-size: 3.25rem; font-weight: 800; line-height: .85;
 .score-button { display: flex; min-height: 105px; align-items: center; justify-content: center; gap: .4rem; flex-direction: column; padding: .75rem .35rem; border: 1px solid transparent; border-radius: .9rem; color: inherit; font-size: .9rem; font-weight: 700; line-height: 1.25; text-align: center; touch-action: manipulation; }
 .change { font-size: 1.65rem; font-weight: 900; letter-spacing: -.05em; }.positive { border-color: #356b55; background: #1d4537; }.negative { border-color: #8a4b50; background: #502b31; }.neutral { border-color: #856b38; background: #4b3b1f; }
 .score-button:active { transform: scale(.97); filter: brightness(1.2); }.score-button:focus-visible, .reset:focus-visible, .undo:focus-visible, .voice:focus-visible { outline: 3px solid #f4ce67; outline-offset: 3px; }
-.hint { margin: 1.35rem 0 0; color: #b8c5bc; text-align: center; font-size: .85rem; }
+.voice-status { min-height: 1.5rem; max-width: 720px; margin: -1.25rem auto 1rem; padding: .35rem .55rem; border: 1px solid #385648; border-radius: .55rem; background: rgb(16 35 29 / .72); color: #cbd8d0; text-align: center; font-size: .8rem; }
 @media (max-width: 760px) {
   .app-shell { padding: max(.5rem, env(safe-area-inset-top)) .5rem max(.5rem, env(safe-area-inset-bottom)); }
   header { gap: .4rem; margin-bottom: .45rem; }
@@ -29,5 +29,5 @@ output { color: #f4ce67; font-size: 3.25rem; font-weight: 800; line-height: .85;
   .controls, .panda-controls, .deck .controls { grid-template-columns: 1fr; gap: .35rem; margin: 0; padding-left: .45rem; }
   .score-button { min-height: 64px; gap: .22rem; padding: .4rem; border-radius: .6rem; font-size: .78rem; }
   .change { font-size: 1.5rem; }
-  .hint { margin: .45rem 0 0; font-size: .7rem; }
+  .voice-status { min-height: 1.35rem; margin: 0 0 .45rem; padding: .25rem .4rem; font-size: .7rem; }
 }

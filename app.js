@@ -83,69 +83,120 @@ document.querySelector("#reset").addEventListener("click", () => {
 
 const voiceButton = document.querySelector("#voice");
 const voiceStatus = document.querySelector("#voice-status");
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
 
 if (!SpeechRecognition) {
   voiceButton.disabled = true;
   voiceStatus.textContent = "Voice commands are not supported by this browser.";
 } else {
   const recognition = new SpeechRecognition();
+  let voiceActive = false;
+  let restartTimer;
+  let lastRecognition = "";
+
   recognition.lang = "en-US";
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = false;
   recognition.maxAlternatives = 3;
 
-  voiceButton.addEventListener("click", async () => {
-    voiceStatus.textContent = "Listening…";
+  function showVoiceState(state) {
+    voiceStatus.textContent = lastRecognition ? `${state} • ${lastRecognition}` : state;
+  }
+
+  function setVoiceButton(active) {
+    voiceButton.classList.toggle("listening", active);
+    voiceButton.textContent = active ? "Stop" : "Voice";
+    voiceButton.setAttribute("aria-pressed", String(active));
+  }
+
+  function stopVoiceMode(message = "Voice stopped.") {
+    voiceActive = false;
+    clearTimeout(restartTimer);
+    setVoiceButton(false);
+    try { recognition.abort(); } catch { /* Recognition was already stopped. */ }
+    showVoiceState(message);
+  }
+
+  async function startVoiceMode() {
+    voiceActive = true;
+    lastRecognition = "";
+    setVoiceButton(true);
+    showVoiceState("Starting voice mode…");
+
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("microphone-unavailable");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
+      if (!voiceActive) return;
       recognition.start();
     } catch (error) {
-      if (error.name === "NotAllowedError" || error.name === "SecurityError") {
-        voiceStatus.textContent = "Microphone access was denied. Allow it in Safari website settings.";
-      } else if (error.name === "InvalidStateError") {
-        voiceStatus.textContent = "Already listening…";
-      } else {
-        voiceStatus.textContent = "Microphone is unavailable on this device.";
-      }
+      voiceActive = false;
+      setVoiceButton(false);
+      voiceStatus.textContent = error.name === "NotAllowedError" || error.name === "SecurityError"
+        ? "Microphone access was denied. Allow it in Safari website settings."
+        : "Could not start voice recognition.";
     }
+  }
+
+  voiceButton.addEventListener("click", () => {
+    if (voiceActive) stopVoiceMode();
+    else startVoiceMode();
   });
 
   recognition.onstart = () => {
-    voiceButton.classList.add("listening");
-    voiceButton.setAttribute("aria-pressed", "true");
+    setVoiceButton(true);
+    showVoiceState("Listening…");
   };
 
   recognition.onresult = (event) => {
-    const result = event.results[0];
-    let card;
-    let transcript = "";
-    for (let index = 0; index < result.length && !card; index += 1) {
-      transcript = result[index].transcript;
-      card = cardFromSpeech(transcript);
-    }
+    for (let resultIndex = event.resultIndex; resultIndex < event.results.length; resultIndex += 1) {
+      const result = event.results[resultIndex];
+      if (!result.isFinal) continue;
 
-    if (!card) {
-      voiceStatus.textContent = `Did not recognize a card in “${transcript}”.`;
-      return;
-    }
+      let card;
+      let transcript = "";
+      for (let alternativeIndex = 0; alternativeIndex < result.length && !card; alternativeIndex += 1) {
+        transcript = result[alternativeIndex].transcript;
+        card = cardFromSpeech(transcript);
+      }
 
-    const changes = cardRules[card];
-    applyChanges(changes);
-    const summary = changes.map(({ counter, change }) => `${counter === "dragon" ? "Dragon" : "Panda"} ${signedNumber(change)}`).join(", ");
-    voiceStatus.textContent = `${card}: ${summary}`;
+      if (!card) {
+        lastRecognition = `Not recognized: “${transcript}”`;
+        showVoiceState("Listening…");
+        continue;
+      }
+
+      const changes = cardRules[card];
+      applyChanges(changes);
+      const summary = changes.map(({ counter, change }) => `${counter === "dragon" ? "Dragon" : "Panda"} ${signedNumber(change)}`).join(", ");
+      lastRecognition = `Recognized ${card}: ${summary}`;
+      showVoiceState("Listening…");
+    }
   };
 
   recognition.onerror = (event) => {
-    voiceStatus.textContent = event.error === "not-allowed" ? "Microphone permission is required." : "Could not hear a card. Tap Voice to try again.";
+    if (event.error === "aborted" && !voiceActive) return;
+    if (event.error === "no-speech" && voiceActive) {
+      showVoiceState("Listening…");
+      return;
+    }
+
+    const messages = {
+      "not-allowed": "Microphone permission is required.",
+      "service-not-allowed": "Speech recognition is unavailable. Make sure Siri is enabled.",
+      "audio-capture": "Safari could not access the microphone.",
+      network: "Voice recognition lost its network connection."
+    };
+    stopVoiceMode(messages[event.error] || `Voice error: ${event.error}.`);
   };
 
   recognition.onend = () => {
-    voiceButton.classList.remove("listening");
-    voiceButton.setAttribute("aria-pressed", "false");
-    if (voiceStatus.textContent === "Listening…") voiceStatus.textContent = "No card heard. Tap Voice to try again.";
+    if (!voiceActive) return;
+    showVoiceState("Listening…");
+    restartTimer = setTimeout(() => {
+      if (!voiceActive) return;
+      try { recognition.start(); } catch { stopVoiceMode("Voice recognition stopped. Tap Voice to restart."); }
+    }, 300);
   };
 }
 
