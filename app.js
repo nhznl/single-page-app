@@ -2,64 +2,23 @@ const storageKey = "card-tracker-v1";
 const historyKey = "card-tracker-history-v2";
 const bucketStorageKey = "card-tracker-bucket-counts-v2";
 const totalDecksStorageKey = "card-tracker-total-decks-v1";
+const sessionDurationStorageKey = "card-tracker-session-duration-v2";
 const totals = JSON.parse(localStorage.getItem(storageKey) || "{\"dragon\":0,\"panda\":0,\"deck\":0}");
 const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
 const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"common-45\":0,\"common-67\":0,\"common-8\":0,\"common-9\":0,\"panda-plus-one\":0,\"panda-three\":0}");
 let totalDecks = Number(localStorage.getItem(totalDecksStorageKey) || 8);
+const storedSessionDuration = Number(localStorage.getItem(sessionDurationStorageKey));
+let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Math.max(5, Math.round(storedSessionDuration))) : 20;
+const sessionCardLimit = 6;
+const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null };
+let sessionStatusMessage = "No active card session.";
+const betTriggers = { dragon: 4, panda: 11 };
 
 const commonRules = {
   "common-45": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -2 }],
   "common-67": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -1 }],
   "common-8": [{ counter: "dragon", change: 2 }, { counter: "panda", change: -2 }],
   "common-9": [{ counter: "dragon", change: 2 }, { counter: "panda", change: 4 }]
-};
-
-const cardRules = {
-  "2": [{ counter: "panda", change: 1 }],
-  "3": [{ counter: "panda", change: -2 }],
-  "4": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -2 }],
-  "5": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -2 }],
-  "6": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -1 }],
-  "7": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -1 }],
-  "8": [{ counter: "dragon", change: 2 }, { counter: "panda", change: -2 }],
-  "9": [{ counter: "dragon", change: 2 }, { counter: "panda", change: 4 }],
-  "10": [{ counter: "panda", change: 1 }],
-  J: [{ counter: "panda", change: 1 }],
-  Q: [{ counter: "panda", change: 1 }],
-  K: [{ counter: "panda", change: 1 }],
-  A: [{ counter: "panda", change: 1 }]
-};
-
-const cardAliases = {
-  "2": ["2", "two"],
-  "3": ["3", "three"],
-  "4": ["4", "four"],
-  "5": ["5", "five"],
-  "6": ["6", "six"],
-  "7": ["7", "seven"],
-  "8": ["8", "eight"],
-  "9": ["9", "nine"],
-  "10": ["10", "ten"],
-  J: ["jack", "jay"],
-  Q: ["queen", "cue"],
-  K: ["king"],
-  A: ["ace"]
-};
-
-const cardBuckets = {
-  "2": ["panda-plus-one"],
-  "3": ["panda-three"],
-  "4": ["common-45"],
-  "5": ["common-45"],
-  "6": ["common-67"],
-  "7": ["common-67"],
-  "8": ["common-8"],
-  "9": ["common-9"],
-  "10": ["panda-plus-one"],
-  J: ["panda-plus-one"],
-  Q: ["panda-plus-one"],
-  K: ["panda-plus-one"],
-  A: ["panda-plus-one"]
 };
 
 function setOutput(selector, value) {
@@ -69,14 +28,83 @@ function setOutput(selector, value) {
 }
 
 function renderDeckStats() {
-  const decksRemaining = totalDecks - totals.deck / 52;
+  const decksRemaining = Math.max(0, totalDecks - totals.deck / 52);
   const decksRemainingText = decksRemaining.toFixed(2);
-  const dTrueCount = decksRemaining === 0 ? "—" : (totals.dragon / decksRemaining).toFixed(2);
-  const pTrueCount = decksRemaining === 0 ? "—" : (totals.panda / decksRemaining).toFixed(2);
+  const dTrueCountValue = decksRemaining === 0 ? null : totals.dragon / decksRemaining;
+  const pTrueCountValue = decksRemaining === 0 ? null : totals.panda / decksRemaining;
+  const dTrueCount = dTrueCountValue === null ? "—" : dTrueCountValue.toFixed(2);
+  const pTrueCount = pTrueCountValue === null ? "—" : pTrueCountValue.toFixed(2);
 
   setOutput("#decks-remaining", decksRemainingText);
   setOutput("#dragon-true-count", dTrueCount);
   setOutput("#panda-true-count", pTrueCount);
+  document.querySelector("#dragon-true-count-stat").classList.toggle("trigger-reached", dTrueCountValue !== null && dTrueCountValue >= betTriggers.dragon);
+  document.querySelector("#panda-true-count-stat").classList.toggle("trigger-reached", pTrueCountValue !== null && pTrueCountValue >= betTriggers.panda);
+}
+
+function renderSessionControls() {
+  const remaining = Math.max(0, sessionCardLimit - cardSession.cardCount);
+  document.querySelector("#end-session").disabled = !cardSession.active;
+  document.querySelectorAll(".deck .score-button").forEach((button) => {
+    button.disabled = cardSession.active && Number(button.dataset.change) > remaining;
+  });
+  document.querySelectorAll(".common-controls .score-button, .panda .score-button").forEach((button) => {
+    button.disabled = cardSession.active && remaining === 0;
+  });
+
+  const status = document.querySelector("#session-status");
+  if (!status) return;
+  if (!cardSession.active) {
+    status.textContent = sessionStatusMessage;
+    return;
+  }
+  const secondsRemaining = Math.max(0, Math.ceil((cardSession.expiresAt - Date.now()) / 1000));
+  const minutes = String(Math.floor(secondsRemaining / 60)).padStart(2, "0");
+  const seconds = String(secondsRemaining % 60).padStart(2, "0");
+  status.textContent = `Session active · ${minutes}:${seconds} remaining · ${remaining} card${remaining === 1 ? "" : "s"} available`;
+}
+
+function endCardSession(message = "No active card session.") {
+  clearInterval(cardSession.timerId);
+  cardSession.timerId = null;
+  cardSession.active = false;
+  cardSession.cardCount = 0;
+  cardSession.expiresAt = 0;
+  sessionStatusMessage = message;
+  renderSessionControls();
+}
+
+function updateSessionCountdown() {
+  if (!cardSession.active) return;
+  if (Date.now() >= cardSession.expiresAt) {
+    endCardSession("Session ended · ready for the next hand.");
+    return;
+  }
+  renderSessionControls();
+}
+
+function startCardSession() {
+  if (cardSession.active && cardSession.cardCount >= sessionCardLimit) return false;
+  if (!cardSession.active) {
+    cardSession.active = true;
+    cardSession.cardCount = 0;
+    cardSession.expiresAt = Date.now() + sessionDuration * 1000;
+    sessionStatusMessage = "";
+    clearInterval(cardSession.timerId);
+    cardSession.timerId = setInterval(updateSessionCountdown, 1000);
+  }
+  cardSession.cardCount += 1;
+  renderSessionControls();
+  return true;
+}
+
+function recordDeckShortcut(change) {
+  if (!cardSession.active) return true;
+  const remaining = sessionCardLimit - cardSession.cardCount;
+  if (change > remaining) return false;
+  cardSession.cardCount += change;
+  renderSessionControls();
+  return true;
 }
 
 function render() {
@@ -91,38 +119,41 @@ function render() {
   localStorage.setItem(historyKey, JSON.stringify(history));
   localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
   localStorage.setItem(totalDecksStorageKey, String(totalDecks));
+  localStorage.setItem(sessionDurationStorageKey, String(sessionDuration));
   document.querySelector("#total-decks").value = totalDecks;
+  document.querySelector("#session-duration").value = sessionDuration;
   renderDeckStats();
+  renderSessionControls();
   document.querySelector("#undo").disabled = history.length === 0;
 }
 
-function applyChanges(changes, buckets = []) {
+function applyChanges(changes, buckets = [], sessionCards = 0) {
   changes.forEach(({ counter, change }) => { totals[counter] += change; });
   buckets.forEach((bucket) => { bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1; });
-  history.push({ changes, buckets });
+  history.push({ changes, buckets, sessionCards });
   render();
 }
 
-function cardFromSpeech(transcript) {
-  const words = new Set(transcript.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean));
-  return Object.keys(cardAliases).find((card) => cardAliases[card].some((alias) => words.has(alias)));
-}
-
-function signedNumber(value) {
-  return value > 0 ? `+${value}` : String(value).replace("-", "−");
+function applyPointCard(changes, buckets = []) {
+  if (!startCardSession()) return false;
+  applyChanges([...changes, { counter: "deck", change: 1 }], buckets, 1);
+  return true;
 }
 
 document.querySelectorAll("[data-counter]").forEach((button) => {
   button.addEventListener("click", () => {
     const change = Number(button.dataset.change);
     const buckets = button.dataset.bucket ? [button.dataset.bucket] : [];
-    applyChanges([{ counter: button.dataset.counter, change }], buckets);
+    if (button.dataset.counter === "deck") {
+      if (recordDeckShortcut(change)) applyChanges([{ counter: "deck", change }], buckets, cardSession.active ? change : 0);
+    }
+    else applyPointCard([{ counter: button.dataset.counter, change }], buckets);
   });
 });
 
 document.querySelectorAll("[data-rule]").forEach((button) => {
   button.addEventListener("click", () => {
-    applyChanges(commonRules[button.dataset.rule], [button.dataset.bucket]);
+    applyPointCard(commonRules[button.dataset.rule], [button.dataset.bucket]);
   });
 });
 
@@ -132,6 +163,9 @@ document.querySelector("#undo").addEventListener("click", () => {
   const changes = lastAction.changes || [{ counter: lastAction.counter, change: lastAction.change }];
   changes.forEach(({ counter, change }) => { totals[counter] -= change; });
   (lastAction.buckets || []).forEach((bucket) => { bucketCounts[bucket] = Math.max(0, (bucketCounts[bucket] || 0) - 1); });
+  if (cardSession.active && lastAction.sessionCards) {
+    cardSession.cardCount = Math.max(0, cardSession.cardCount - lastAction.sessionCards);
+  }
   render();
 });
 
@@ -139,6 +173,7 @@ document.querySelector("#reset").addEventListener("click", () => {
   Object.keys(totals).forEach((key) => { totals[key] = 0; });
   Object.keys(bucketCounts).forEach((key) => { bucketCounts[key] = 0; });
   history.length = 0;
+  endCardSession("Session reset.");
   render();
 });
 
@@ -150,124 +185,17 @@ document.querySelector("#total-decks").addEventListener("input", (event) => {
   renderDeckStats();
 });
 
-const voiceButton = document.querySelector("#voice");
-const voiceStatus = document.querySelector("#voice-status");
-const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+document.querySelector("#session-duration").addEventListener("change", (event) => {
+  sessionDuration = Math.min(120, Math.max(5, Math.round(Number(event.target.value) || 20)));
+  event.target.value = sessionDuration;
+  if (cardSession.active) cardSession.expiresAt = Date.now() + sessionDuration * 1000;
+  localStorage.setItem(sessionDurationStorageKey, String(sessionDuration));
+  renderSessionControls();
+});
 
-if (!SpeechRecognition) {
-  voiceButton.disabled = true;
-  voiceStatus.textContent = "Voice commands are not supported by this browser.";
-} else {
-  const recognition = new SpeechRecognition();
-  let voiceActive = false;
-  let restartTimer;
-  let lastRecognition = "";
-
-  recognition.lang = "en-US";
-  recognition.continuous = true;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 3;
-
-  function showVoiceState(state) {
-    voiceStatus.textContent = lastRecognition ? `${state} • ${lastRecognition}` : state;
-  }
-
-  function setVoiceButton(active) {
-    voiceButton.classList.toggle("listening", active);
-    voiceButton.textContent = active ? "Stop" : "Voice";
-    voiceButton.setAttribute("aria-pressed", String(active));
-  }
-
-  function stopVoiceMode(message = "Voice stopped.") {
-    voiceActive = false;
-    clearTimeout(restartTimer);
-    setVoiceButton(false);
-    try { recognition.abort(); } catch { /* Recognition was already stopped. */ }
-    showVoiceState(message);
-  }
-
-  async function startVoiceMode() {
-    voiceActive = true;
-    lastRecognition = "";
-    setVoiceButton(true);
-    showVoiceState("Starting voice mode…");
-
-    try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error("microphone-unavailable");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop());
-      if (!voiceActive) return;
-      recognition.start();
-    } catch (error) {
-      voiceActive = false;
-      setVoiceButton(false);
-      voiceStatus.textContent = error.name === "NotAllowedError" || error.name === "SecurityError"
-        ? "Microphone access was denied. Allow it in Safari website settings."
-        : "Could not start voice recognition.";
-    }
-  }
-
-  voiceButton.addEventListener("click", () => {
-    if (voiceActive) stopVoiceMode();
-    else startVoiceMode();
-  });
-
-  recognition.onstart = () => {
-    setVoiceButton(true);
-    showVoiceState("Listening…");
-  };
-
-  recognition.onresult = (event) => {
-    for (let resultIndex = event.resultIndex; resultIndex < event.results.length; resultIndex += 1) {
-      const result = event.results[resultIndex];
-      if (!result.isFinal) continue;
-
-      let card;
-      let transcript = "";
-      for (let alternativeIndex = 0; alternativeIndex < result.length && !card; alternativeIndex += 1) {
-        transcript = result[alternativeIndex].transcript;
-        card = cardFromSpeech(transcript);
-      }
-
-      if (!card) {
-        lastRecognition = `Not recognized: “${transcript}”`;
-        showVoiceState("Listening…");
-        continue;
-      }
-
-      const changes = cardRules[card];
-      applyChanges(changes, cardBuckets[card]);
-      const summary = changes.map(({ counter, change }) => `${counter === "dragon" ? "D" : "P"} ${signedNumber(change)}`).join(", ");
-      lastRecognition = `Recognized ${card}: ${summary}`;
-      showVoiceState("Listening…");
-    }
-  };
-
-  recognition.onerror = (event) => {
-    if (event.error === "aborted" && !voiceActive) return;
-    if (event.error === "no-speech" && voiceActive) {
-      showVoiceState("Listening…");
-      return;
-    }
-
-    const messages = {
-      "not-allowed": "Microphone permission is required.",
-      "service-not-allowed": "Speech recognition is unavailable. Make sure Siri is enabled.",
-      "audio-capture": "Safari could not access the microphone.",
-      network: "Voice recognition lost its network connection."
-    };
-    stopVoiceMode(messages[event.error] || `Voice error: ${event.error}.`);
-  };
-
-  recognition.onend = () => {
-    if (!voiceActive) return;
-    showVoiceState("Listening…");
-    restartTimer = setTimeout(() => {
-      if (!voiceActive) return;
-      try { recognition.start(); } catch { stopVoiceMode("Voice recognition stopped. Tap Voice to restart."); }
-    }, 300);
-  };
-}
+document.querySelector("#end-session").addEventListener("click", () => {
+  endCardSession("Session ended early · ready for the next hand.");
+});
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
 render();
