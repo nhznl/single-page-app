@@ -252,6 +252,11 @@ document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
   if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
   const key = event.key.toUpperCase();
+  if (key === "ENTER") {
+    event.preventDefault();
+    if (cardSession.active) endCardSession("Session ended early · ready for the next hand.");
+    return;
+  }
   if (key === "BACKSPACE" || key === "DELETE") {
     event.preventDefault();
     updateSessionCountdown();
