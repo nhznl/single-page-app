@@ -187,13 +187,13 @@ function applyChanges(changes, buckets = [], sessionCards = 0, cardLabel = null)
   history.push(action);
   if (cardSession.active && sessionCards > 0) {
     const button = buckets.length ? document.querySelector(`[data-bucket="${buckets[0]}"]`) : null;
-    const label = cardLabel ?? (button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${sessionCards}`);
+    const label = cardLabel ?? (button?.dataset.bucket === "panda-faces" ? "FACE" : button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${sessionCards}`);
     cardSession.actions.push({ action, label });
   }
   const pointValues = { ace: 1, two: 2, "panda-three": 3, four: 4, five: 5, six: 6, seven: 7, "common-8": 8, "common-9": 9, "panda-faces": 0 };
   const bucket = buckets[0] || null;
   const button = bucket ? document.querySelector(`[data-bucket="${bucket}"]`) : null;
-  const label = cardLabel ?? (button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${changes.find(item => item.counter === "deck").change}`);
+  const label = cardLabel ?? (bucket === "panda-faces" ? "FACE" : button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${changes.find(item => item.counter === "deck").change}`);
   action.researchEntryId = BaccaratResearch.record(researchState, cardSession.active ? cardSession.researchId : null, {
     kind: bucket ? "card" : "unknown", label, bucket, pointValue: bucket ? pointValues[bucket] : null,
     count: bucket ? 1 : changes.find(item => item.counter === "deck").change,
@@ -391,7 +391,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=42");
+      mainBetWorker = new Worker("main-bets-worker.js?v=43");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
@@ -513,7 +513,7 @@ function renderResearch() {
     appendResearchText(row, "p", `${researchTime(session.startedAt)} · ${session.endedAt ? ({ manual: "Ended manually", timer: "Timer ended", "six-cards": "6 cards recorded", reset: "Ended on reset", "reload-interrupted": "Interrupted by reload" }[session.endReason] || session.endReason) : "In progress"}${session.corrections.length ? " · corrected" : ""}`, "research-meta");
     const cards = appendResearchText(row, "div", "", "research-cards");
     session.entries.forEach(entry => {
-      const card = appendResearchText(cards, entry.undoneAt ? "s" : "span", entry.label, "research-card");
+      const card = appendResearchText(cards, entry.undoneAt ? "s" : "span", entry.bucket === "panda-faces" && entry.source === "tap" ? "FACE" : entry.label, "research-card");
       card.title = `${entry.source}${entry.undoneAt ? ` · undone ${researchTime(entry.undoneAt)}` : ""}`;
     });
     if (!session.entries.length) appendResearchText(cards, "span", "No retained entries");

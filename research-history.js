@@ -7,7 +7,7 @@
   function newShoe(baseline, time = now()) {
     return { id: uid(), startedAt: time, frozenAt: null, baseline: copy(baseline), lastSnapshot: copy(baseline), sessions: [], outsideSession: [], qualityNotes: baseline.totals.deck > 0 ? ["Recording began with existing totals; earlier sessions are not available."] : [] };
   }
-  function create(baseline) { return { schemaVersion: 1, appVersion: "42", tableRules: rules, current: newShoe(baseline), frozen: [] }; }
+  function create(baseline) { return { schemaVersion: 1, appVersion: "43", tableRules: rules, current: newShoe(baseline), frozen: [] }; }
   function validate(state) {
     if (state?.schemaVersion !== 1 || !state.current || !Array.isArray(state.current.sessions) || !Array.isArray(state.frozen)) throw Error("Unsupported research history");
     for (const shoe of [state.current, ...state.frozen]) {
