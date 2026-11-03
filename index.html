@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=36" />
+    <link rel="stylesheet" href="styles.css?v=37" />
     <title>Card Tracker</title>
   </head>
   <body>
@@ -19,7 +19,6 @@
           <span>Session (sec)</span>
           <input id="session-duration" type="number" min="5" max="120" step="1" inputmode="numeric" value="25" />
         </label>
-        <button class="undo" id="undo" type="button" disabled>Undo</button>
         <button class="end-session" id="end-session" type="button" disabled>End Session</button>
         <button class="reset" id="reset" type="button">Reset all totals</button>
       </header>
@@ -35,7 +34,15 @@
       </section>
 
       <section class="card-inputs" aria-label="Cards in rank order">
-        <h2 class="cards-heading">Cards <span>Type cards · Delete undo · Enter end</span></h2>
+        <div class="cards-toolbar">
+          <h2>Cards</h2>
+          <button id="toggle-card-typing" class="typing-toggle" type="button" aria-expanded="false" aria-controls="card-entry-form">Type</button>
+          <button class="undo" id="undo" type="button" disabled>Undo</button>
+        </div>
+        <form id="card-entry-form" class="card-entry-form" hidden>
+          <label for="card-entry">Type A, 2–9, 10, J, Q, K · Delete undo · Enter end</label>
+          <input id="card-entry" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Type cards, e.g. 666AJ10" aria-label="Type cards; Backspace undoes the last active-session entry" />
+        </form>
         <div class="card-session-line">
           <p class="card-legend">D current · D+ detailed</p>
           <div id="session-cards" class="session-cards" role="status" aria-label="Cards entered this session" aria-live="polite" aria-atomic="true"></div>
@@ -54,20 +61,8 @@
           <button class="score-button shared" type="button" data-card data-emphasis="gold" data-bucket="common-9"><span class="shared-ranks">9</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
           <button class="score-button positive" type="button" data-card data-bucket="panda-faces"><span class="shared-ranks">10 · J · Q · K</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
         </div>
-        <p id="legacy-count" class="count-note" hidden></p>
-        <p id="legacy-45-count" class="count-note" hidden></p>
       </section>
-        <article class="deck" aria-label="Total cards dealt">
-          <div class="tracker-heading"><h2>Cards dealt</h2><output id="deck-total" aria-live="polite">0</output></div>
-          <div class="controls">
-            <button class="score-button neutral" type="button" data-counter="deck" data-change="1"><span class="change">+1</span></button>
-            <button class="score-button neutral" type="button" data-counter="deck" data-change="2"><span class="change">+2</span></button>
-            <button class="score-button neutral" type="button" data-counter="deck" data-change="3"><span class="change">+3</span></button>
-            <button class="score-button neutral" type="button" data-counter="deck" data-change="4"><span class="change">+4</span></button>
-            <button class="score-button neutral" type="button" data-counter="deck" data-change="5"><span class="change">+5</span></button>
-            <button class="score-button neutral" type="button" data-counter="deck" data-change="6"><span class="change">+6</span></button>
-          </div>
-        </article>
+
 
       <section class="deck-summary" aria-label="Deck information">
         <label class="deck-stat">
@@ -97,8 +92,19 @@
         <p class="main-bet-rules">Your table: Dragon pushes Banker; Panda pushes Player. Other wins pay 1:1; opposite bets lose; ties push.</p>
         <p class="main-bet-rules">Expected return per wager, not a prediction. Dragon/Panda side bets are separate.</p>
       </aside>
+        <article class="deck" aria-label="Total cards dealt">
+          <div class="tracker-heading"><h2>Cards dealt</h2><output id="deck-total" aria-live="polite">0</output></div>
+          <div class="controls">
+            <button class="score-button neutral" type="button" data-counter="deck" data-change="1"><span class="change">+1</span></button>
+            <button class="score-button neutral" type="button" data-counter="deck" data-change="2"><span class="change">+2</span></button>
+            <button class="score-button neutral" type="button" data-counter="deck" data-change="3"><span class="change">+3</span></button>
+            <button class="score-button neutral" type="button" data-counter="deck" data-change="4"><span class="change">+4</span></button>
+            <button class="score-button neutral" type="button" data-counter="deck" data-change="5"><span class="change">+5</span></button>
+            <button class="score-button neutral" type="button" data-counter="deck" data-change="6"><span class="change">+6</span></button>
+          </div>
+        </article>
     </main>
-    <script src="main-bets.js?v=36"></script>
-    <script src="app.js?v=36"></script>
+    <script src="main-bets.js?v=37"></script>
+    <script src="app.js?v=37"></script>
   </body>
 </html>

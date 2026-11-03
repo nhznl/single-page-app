@@ -84,7 +84,7 @@ test('composition validation preserves unknown, grouped, invalid and exhausted s
   const input = { decks: 8, dealt: 0, counts: {} };
   assert.deepEqual(remainingShoe(input).cards, [128,32,32,32,32,32,32,32,32,32]);
   assert.match(remainingShoe({...input, dealt: 2}).reason, /no rank/);
-  assert.match(remainingShoe({...input, dealt: 2, counts: {'common-45': 2}}).reason, /grouped/);
+  assert.match(remainingShoe({...input, dealt: 2, counts: {'common-45': 2}}).reason, /Individual card values/);
   assert.match(remainingShoe({...input, dealt: 33, counts: {ace: 33}}).reason, /exceeds/);
   assert.match(remainingShoe({...input, counts: {ace: -1}}).reason, /invalid/);
   assert.match(remainingShoe({...input, counts: {ace: 0.5}}).reason, /invalid/);

@@ -11,7 +11,7 @@
     for (const [bucket, count] of Object.entries(counts)) {
       if (!Number.isInteger(count) || count < 0) return { reason: "Recorded card counts are invalid." };
       if (!count) continue;
-      if (!Object.hasOwn(buckets, bucket)) return { reason: "Earlier grouped cards cannot be separated. Reset at a new shoe." };
+      if (!Object.hasOwn(buckets, bucket)) return { reason: "Individual card values are needed for this comparison." };
       recorded += count;
       cards[buckets[bucket]] -= count;
     }

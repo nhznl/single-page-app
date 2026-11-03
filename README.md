@@ -18,6 +18,10 @@ Host these static files on a free HTTPS host, such as GitHub Pages, Cloudflare P
 
 The counters work offline once the page has been opened online at least once.
 
+## Card entry
+
+Tap **Type** in the Cards section to open a text field and the native mobile keyboard. Enter A, 2–9, 10, J, Q, or K; lowercase works too. Typing and card taps share one session. `10` counts as one card; an unfinished `1` waits for `0`. Backspace/Delete removes the latest active-session entry, and Enter ends the session. The **Undo** button is beside Type. Tap **Done** to close the typing field. Cards dealt shortcuts are at the bottom of the page.
+
 ## Next-hand main-bet comparison
 
 After a card session ends, the status row shows **BANKER**, **PLAYER**, or **SIT OUT**. The compact panel above the cards shows both expected returns and any reason the comparison is unavailable. A side is recommended only when its expected return is positive; otherwise the recommendation is to sit out the main bets. Dragon/Panda side-bet signals remain separate.

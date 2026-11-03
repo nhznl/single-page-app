@@ -13,6 +13,9 @@ const sessionCardLimit = 6;
 const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null, actions: [] };
 let sessionStatusMessage = "No active card session.";
 let pendingTen = false;
+let cardEntryRenderedValue = "";
+let cardEntryComposing = false;
+let committedCardText = null;
 const betTriggers = { dragon: 4, dragonDetailed: 10, panda: 11 };
 
 // Detailed Dragon values use tenths to avoid accumulating floating-point error.
@@ -69,6 +72,7 @@ function renderDeckStats() {
 }
 
 function renderSessionCards() {
+  syncCardEntry();
   const list = document.querySelector("#session-cards");
   const labels = cardSession.active ? cardSession.actions.map(({ label }) => label) : [];
   if (pendingTen) labels.push("1…");
@@ -167,13 +171,6 @@ function render() {
     button.querySelector(".current-contribution").textContent = `D ${signed(count * rule.dragon)}`;
     button.querySelector(".detailed-contribution").textContent = `D+ ${signed(count * rule.detailedTenths / 10, 1)}`;
   });
-  const legacyNote = document.querySelector("#legacy-count");
-  legacyNote.hidden = !hasUnsplitCards();
-  legacyNote.textContent = "Earlier grouped A/2 or 6/7 cards cannot be separated. Current D/P totals are preserved; detailed D is unavailable until you reset all totals for a new shoe.";
-  const legacy45 = bucketCounts["common-45"] || 0;
-  const legacy45Note = document.querySelector("#legacy-45-count");
-  legacy45Note.hidden = legacy45 === 0;
-  legacy45Note.textContent = `Earlier 4/5 combined: ${legacy45}. Included in D/P and detailed D totals; separate 4/5 counts start from this update.`;
   localStorage.setItem(storageKey, JSON.stringify(totals));
   localStorage.setItem(historyKey, JSON.stringify(history));
   localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
@@ -250,17 +247,14 @@ const keyboardCards = {
   J: "panda-faces", Q: "panda-faces", K: "panda-faces"
 };
 
-document.addEventListener("keydown", (event) => {
-  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
-  if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
-  const key = event.key.toUpperCase();
+// All keyboard paths share the same parser and undo/session behavior.
+function handleCardKey(key) {
+  key = key.toUpperCase();
   if (key === "ENTER") {
-    event.preventDefault();
     if (cardSession.active) endCardSession("Session ended early · ready for the next hand.");
     return;
   }
   if (key === "BACKSPACE" || key === "DELETE") {
-    event.preventDefault();
     updateSessionCountdown();
     if (pendingTen) {
       pendingTen = false;
@@ -272,7 +266,6 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (key === "1") {
-    event.preventDefault();
     updateSessionCountdown();
     pendingTen = true;
     renderSessionCards();
@@ -280,19 +273,110 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (key === "0") {
-    event.preventDefault();
     updateSessionCountdown();
     if (pendingTen) recordCard("panda-faces", "10");
     return;
   }
   if (keyboardCards[key]) {
-    event.preventDefault();
     recordCard(keyboardCards[key], key);
   } else if (key.length === 1 && pendingTen) {
     pendingTen = false;
     renderSessionCards();
     refreshMainBets();
   }
+}
+
+function syncCardEntry() {
+  if (cardEntryComposing) return;
+  const input = document.querySelector("#card-entry");
+  const labels = cardSession.active ? cardSession.actions.map(({ label }) => label) : [];
+  if (pendingTen) labels.push("1");
+  input.value = labels.join(" ");
+  cardEntryRenderedValue = input.value;
+  if (document.activeElement === input) input.setSelectionRange(input.value.length, input.value.length);
+}
+
+function typeCardText(text) {
+  for (const key of text) handleCardKey(key);
+  syncCardEntry();
+}
+
+const cardEntry = document.querySelector("#card-entry");
+const cardEntryForm = document.querySelector("#card-entry-form");
+const typingToggle = document.querySelector("#toggle-card-typing");
+typingToggle.addEventListener("click", () => {
+  const open = cardEntryForm.hidden;
+  cardEntryForm.hidden = !open;
+  typingToggle.setAttribute("aria-expanded", String(open));
+  typingToggle.textContent = open ? "Done" : "Type";
+  if (open) {
+    syncCardEntry();
+    cardEntry.focus();
+  } else {
+    cardEntry.blur();
+    pendingTen = false;
+    renderSessionControls();
+  }
+});
+cardEntryForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  handleCardKey("ENTER");
+  syncCardEntry();
+});
+cardEntry.addEventListener("keydown", (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+  if (["Enter", "Backspace", "Delete"].includes(event.key)) {
+    event.preventDefault();
+    handleCardKey(event.key);
+    syncCardEntry();
+  }
+});
+cardEntry.addEventListener("beforeinput", (event) => {
+  if (!event.isComposing && event.cancelable && event.inputType?.startsWith("delete")) {
+    event.preventDefault();
+    handleCardKey("BACKSPACE");
+    syncCardEntry();
+  }
+});
+cardEntry.addEventListener("compositionstart", () => { cardEntryComposing = true; });
+cardEntry.addEventListener("compositionend", (event) => {
+  cardEntryComposing = false;
+  committedCardText = event.data;
+  typeCardText(event.data || "");
+  setTimeout(() => { committedCardText = null; }, 0);
+});
+cardEntry.addEventListener("input", (event) => {
+  if (event.isComposing || cardEntryComposing) return;
+  if (committedCardText !== null && event.data === committedCardText) {
+    committedCardText = null;
+    syncCardEntry();
+    return;
+  }
+  if (event.inputType?.startsWith("delete")) handleCardKey("BACKSPACE");
+  else {
+    let text = event.data;
+    if (text == null) {
+      const value = cardEntry.value;
+      let prefix = 0, suffix = 0;
+      while (prefix < Math.min(value.length, cardEntryRenderedValue.length) && value[prefix] === cardEntryRenderedValue[prefix]) prefix++;
+      while (suffix < Math.min(value.length, cardEntryRenderedValue.length) - prefix && value[value.length - 1 - suffix] === cardEntryRenderedValue[cardEntryRenderedValue.length - 1 - suffix]) suffix++;
+      text = value.slice(prefix, value.length - suffix);
+    }
+    if (text) typeCardText(text);
+  }
+  syncCardEntry();
+});
+cardEntry.addEventListener("paste", (event) => {
+  event.preventDefault();
+  typeCardText(event.clipboardData.getData("text"));
+});
+cardEntry.addEventListener("drop", (event) => event.preventDefault());
+document.addEventListener("keydown", (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+  if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
+  const key = event.key.toUpperCase();
+  if (keyboardCards[key] || ["1", "0", "ENTER", "BACKSPACE", "DELETE"].includes(key)) event.preventDefault();
+  handleCardKey(key);
 });
 
 document.querySelector("#reset").addEventListener("click", () => {
@@ -376,7 +460,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=36");
+      mainBetWorker = new Worker("main-bets-worker.js?v=37");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
