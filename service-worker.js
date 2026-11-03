@@ -1,5 +1,5 @@
-const cacheName = "card-tracker-v38";
-const files = ["./", "index.html", "styles.css?v=38", "app.js?v=38", "main-bets.js?v=38", "main-bets-worker.js?v=38", "manifest.webmanifest", "icon.svg"];
+const cacheName = "card-tracker-v39";
+const files = ["./", "index.html", "styles.css?v=39", "app.js?v=39", "main-bets.js?v=39", "main-bets-worker.js?v=39", "manifest.webmanifest", "icon.svg"];
 self.addEventListener("install", (event) => event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll(files.map((file) => new Request(file, { cache: "reload" })))).then(() => self.skipWaiting())));
 self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== cacheName).map((key) => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (event) => {

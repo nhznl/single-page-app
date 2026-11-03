@@ -300,21 +300,6 @@ function typeCardText(text) {
 
 const cardEntry = document.querySelector("#card-entry");
 const cardEntryForm = document.querySelector("#card-entry-form");
-const typingToggle = document.querySelector("#toggle-card-typing");
-typingToggle.addEventListener("click", () => {
-  const open = cardEntryForm.hidden;
-  cardEntryForm.hidden = !open;
-  typingToggle.setAttribute("aria-expanded", String(open));
-  typingToggle.textContent = open ? "Done" : "Type";
-  if (open) {
-    syncCardEntry();
-    cardEntry.focus();
-  } else {
-    cardEntry.blur();
-    pendingTen = false;
-    renderSessionControls();
-  }
-});
 cardEntryForm.addEventListener("submit", (event) => {
   event.preventDefault();
   handleCardKey("ENTER");
@@ -457,7 +442,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=38");
+      mainBetWorker = new Worker("main-bets-worker.js?v=39");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };

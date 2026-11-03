@@ -74,8 +74,8 @@ output { color: #f4ce67; font-size: 2.2rem; font-weight: 800; line-height: 1; }
 
 header { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 header .session-control { justify-self: start; }
-header .end-session, header .reset { min-height: 48px; width: 100%; font-size: .85rem; font-weight: 800; touch-action: manipulation; }
-header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
+header .reset { min-height: 48px; width: 100%; font-size: .85rem; font-weight: 800; touch-action: manipulation; }
+.cards-toolbar .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 .card-inputs [data-emphasis] { border-width: 2px; color: #10231d; }
 .card-inputs [data-emphasis="teal"] { background: #69d8bd; border-color: #a2f1dc; }
 .card-inputs [data-emphasis="gold"] { background: #f4ce67; border-color: #ffe6a2; }
@@ -111,13 +111,13 @@ header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 
 .main-bets[data-state="entering"] .main-bet-values, .main-bets[data-state="entering"] #main-bet-reason { display: none; }
 
-header .session-control { grid-column: 1 / -1; }
+header .session-control { grid-column: auto; }
 .cards-toolbar { display: flex; align-items: center; gap: .4rem; margin-bottom: .25rem; }
 .cards-toolbar h2 { margin-right: auto; }
 .cards-toolbar button { min-height: 44px; min-width: 70px; font-size: .85rem; touch-action: manipulation; }
-.typing-toggle { padding: .4rem .75rem; border: 1px solid #71c8ac; border-radius: .6rem; background: #28654f; color: #fff; font: inherit; font-weight: 700; }
-.typing-toggle:focus-visible { outline: 3px solid #f4ce67; outline-offset: 3px; }
 .card-entry-form { margin: .3rem 0 .5rem; }
 .card-entry-form label { display: block; margin-bottom: .3rem; color: #cbd8d0; font-size: .65rem; }
 .card-entry-form input { width: 100%; min-height: 44px; padding: .5rem; border: 1px solid #71c8ac; border-radius: .5rem; background: #10231d; color: #f8f4e9; font: inherit; font-size: 16px; }
 .card-entry-form input::placeholder { color: #b9cec2; }
+
+.cards-toolbar .end-session { min-width: 110px; font-weight: 800; }
