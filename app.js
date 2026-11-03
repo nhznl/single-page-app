@@ -399,7 +399,7 @@ let mainBetInputKey = null;
 let mainBetView = { phase: "unavailable", result: null, reason: "" };
 
 function showMainBetView(phase, result = null, reason = "") {
-  const names = { unavailable: "Insufficient data", calculating: "Calculating…", entering: "Hand in progress", pending: "Finish typing 10", error: "Unavailable", "sit-out": "SIT OUT", banker: "BANKER", player: "PLAYER" };
+  const names = { unavailable: "Insufficient data", "new-shoe": "New shoe needed", calculating: "Calculating…", entering: "Hand in progress", pending: "Finish typing 10", error: "Unavailable", "sit-out": "SIT OUT", banker: "BANKER", player: "PLAYER" };
   const state = phase === "ready" ? result.recommendation : phase;
   const choice = names[state];
   const panel = document.querySelector("#main-bets");
@@ -411,6 +411,7 @@ function showMainBetView(phase, result = null, reason = "") {
   }
   const explanation = result ? (state === "sit-out" ? "Neither main bet has a positive expected return." : "Positive expected return; no guaranteed win.") : reason;
   document.querySelector("#main-bet-reason").textContent = explanation;
+  document.querySelector("#main-bet-reason").hidden = !explanation;
   const status = document.querySelector("#session-status");
   status.hidden = !cardSession.active;
   status.dataset.mainBetState = state;
@@ -428,7 +429,7 @@ function refreshMainBets() {
   const input = BaccaratMainBets.remainingShoe({ decks: Number(document.querySelector("#total-decks").value), dealt: totals.deck, counts: bucketCounts });
   if (!input.cards) {
     mainBetInputKey = null;
-    showMainBetView("unavailable", null, input.reason);
+    showMainBetView(input.code === "legacy-ranks" ? "new-shoe" : "unavailable", null, input.reason || "");
     return;
   }
   const key = JSON.stringify(input.cards);
@@ -442,7 +443,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=39");
+      mainBetWorker = new Worker("main-bets-worker.js?v=40");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };

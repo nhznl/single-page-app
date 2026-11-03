@@ -1,5 +1,5 @@
 "use strict";
-importScripts("main-bets.js?v=39");
+importScripts("main-bets.js?v=40");
 self.onmessage = ({ data }) => {
   try {
     self.postMessage({ id: data.id, result: BaccaratMainBets.calculate(data.cards) });
