@@ -20,7 +20,7 @@ The counters work offline once the page has been opened online at least once.
 
 ## Card entry
 
-Tap the typing field in the Cards section to open the native mobile keyboard. Enter A, 2–9, 10, J, Q, or K; lowercase works too. Typing and card taps share one session. `10` counts as one card; an unfinished `1` waits for `0`. Backspace/Delete removes the latest active-session entry, and Enter ends the session. **End Session** and **Undo** are beside the Cards heading. Cards dealt shortcuts are at the bottom of the page.
+Tap card buttons on mobile. With a physical keyboard, enter A, 2–9, 10, J, Q, or K; lowercase works too. Keyboard entry and card taps share one session. `10` counts as one card; an unfinished `1` waits for `0`. Backspace/Delete removes the latest active-session entry, and Enter ends the session. **End Session** and **Undo** are beside the Cards heading. Cards dealt shortcuts are at the bottom of the page.
 
 ## Next-hand main-bet comparison
 

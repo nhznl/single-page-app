@@ -13,9 +13,6 @@ const sessionCardLimit = 6;
 const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null, actions: [] };
 let sessionStatusMessage = "No active card session.";
 let pendingTen = false;
-let cardEntryRenderedValue = "";
-let cardEntryComposing = false;
-let committedCardText = null;
 const betTriggers = { dragon: 4, dragonDetailed: 10, panda: 11 };
 
 // Detailed Dragon values use tenths to avoid accumulating floating-point error.
@@ -72,7 +69,6 @@ function renderDeckStats() {
 }
 
 function renderSessionCards() {
-  syncCardEntry();
   const list = document.querySelector("#session-cards");
   const labels = cardSession.active ? cardSession.actions.map(({ label }) => label) : [];
   if (pendingTen) labels.push("1…");
@@ -244,7 +240,7 @@ const keyboardCards = {
   J: "panda-faces", Q: "panda-faces", K: "panda-faces"
 };
 
-// All keyboard paths share the same parser and undo/session behavior.
+// Physical keyboard entry shares the card-tap session and undo behavior.
 function handleCardKey(key) {
   key = key.toUpperCase();
   if (key === "ENTER") {
@@ -283,76 +279,6 @@ function handleCardKey(key) {
   }
 }
 
-function syncCardEntry() {
-  if (cardEntryComposing) return;
-  const input = document.querySelector("#card-entry");
-  const labels = cardSession.active ? cardSession.actions.map(({ label }) => label) : [];
-  if (pendingTen) labels.push("1");
-  input.value = labels.join(" ");
-  cardEntryRenderedValue = input.value;
-  if (document.activeElement === input) input.setSelectionRange(input.value.length, input.value.length);
-}
-
-function typeCardText(text) {
-  for (const key of text) handleCardKey(key);
-  syncCardEntry();
-}
-
-const cardEntry = document.querySelector("#card-entry");
-const cardEntryForm = document.querySelector("#card-entry-form");
-cardEntryForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  handleCardKey("ENTER");
-  syncCardEntry();
-});
-cardEntry.addEventListener("keydown", (event) => {
-  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
-  if (["Enter", "Backspace", "Delete"].includes(event.key)) {
-    event.preventDefault();
-    handleCardKey(event.key);
-    syncCardEntry();
-  }
-});
-cardEntry.addEventListener("beforeinput", (event) => {
-  if (!event.isComposing && event.cancelable && event.inputType?.startsWith("delete")) {
-    event.preventDefault();
-    handleCardKey("BACKSPACE");
-    syncCardEntry();
-  }
-});
-cardEntry.addEventListener("compositionstart", () => { cardEntryComposing = true; });
-cardEntry.addEventListener("compositionend", (event) => {
-  cardEntryComposing = false;
-  committedCardText = event.data;
-  typeCardText(event.data || "");
-  setTimeout(() => { committedCardText = null; }, 0);
-});
-cardEntry.addEventListener("input", (event) => {
-  if (event.isComposing || cardEntryComposing) return;
-  if (committedCardText !== null && event.data === committedCardText) {
-    committedCardText = null;
-    syncCardEntry();
-    return;
-  }
-  if (event.inputType?.startsWith("delete")) handleCardKey("BACKSPACE");
-  else {
-    let text = event.data;
-    if (text == null) {
-      const value = cardEntry.value;
-      let prefix = 0, suffix = 0;
-      while (prefix < Math.min(value.length, cardEntryRenderedValue.length) && value[prefix] === cardEntryRenderedValue[prefix]) prefix++;
-      while (suffix < Math.min(value.length, cardEntryRenderedValue.length) - prefix && value[value.length - 1 - suffix] === cardEntryRenderedValue[cardEntryRenderedValue.length - 1 - suffix]) suffix++;
-      text = value.slice(prefix, value.length - suffix);
-    }
-    if (text) typeCardText(text);
-  }
-  syncCardEntry();
-});
-cardEntry.addEventListener("paste", (event) => {
-  event.preventDefault();
-  typeCardText(event.clipboardData.getData("text"));
-});
-cardEntry.addEventListener("drop", (event) => event.preventDefault());
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
   if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
@@ -443,7 +369,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=40");
+      mainBetWorker = new Worker("main-bets-worker.js?v=41");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };

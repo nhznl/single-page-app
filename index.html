@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=40" />
+    <link rel="stylesheet" href="styles.css?v=41" />
     <title>Card Tracker</title>
   </head>
   <body>
@@ -38,10 +38,6 @@
           <button class="end-session" id="end-session" type="button" disabled>End Session</button>
           <button class="undo" id="undo" type="button" disabled>Undo</button>
         </div>
-        <form id="card-entry-form" class="card-entry-form">
-          <label for="card-entry">Type A, 2–9, 10, J, Q, K · Delete undo · Enter end</label>
-          <input id="card-entry" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Type cards, e.g. 666AJ10" aria-label="Type cards; Backspace undoes the last active-session entry" />
-        </form>
         <div class="card-session-line">
           <p class="card-legend">D current · D+ detailed</p>
           <div id="session-cards" class="session-cards" role="status" aria-label="Cards entered this session" aria-live="polite" aria-atomic="true"></div>
@@ -103,7 +99,7 @@
           </div>
         </article>
     </main>
-    <script src="main-bets.js?v=40"></script>
-    <script src="app.js?v=40"></script>
+    <script src="main-bets.js?v=41"></script>
+    <script src="app.js?v=41"></script>
   </body>
 </html>
