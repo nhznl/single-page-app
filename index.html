@@ -25,30 +25,22 @@
       </header>
       <p class="session-status" id="session-status" aria-live="polite">No active card session.</p>
 
-      <section class="running-totals" aria-label="Running counts">
-        <div><span class="counter-label">D</span><output id="dragon-total" aria-label="D total" aria-live="polite">0</output></div>
-        <div><span class="counter-label">D detailed</span><output id="dragon-detailed-total" aria-label="Detailed D total" aria-live="polite">0.0</output></div>
-        <div><span class="counter-label">P</span><output id="panda-total" aria-label="P total" aria-live="polite">0</output></div>
-      </section>
-      <section class="input-columns" aria-label="Card inputs">
-        <div class="card-inputs" aria-label="Cards in rank order">
-          <h2>Cards</h2>
-          <p class="card-legend">D current · D+ detailed</p>
-          <div class="card-group">
-            <div class="split-cards"><button class="score-button positive" type="button" data-card data-bucket="ace"><span class="shared-ranks">A</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button><button class="score-button positive" type="button" data-card data-bucket="two"><span class="shared-ranks">2</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button></div>
-            <button class="score-button negative" type="button" data-card data-bucket="panda-three"><span class="shared-ranks">3</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
-            <button class="score-button shared" type="button" data-card data-bucket="common-45"><span class="shared-ranks">4 · 5</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
-          </div>
-          <div class="card-group">
-            <div class="split-cards"><button class="score-button shared" type="button" data-card data-bucket="six"><span class="shared-ranks">6</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button><button class="score-button shared" type="button" data-card data-bucket="seven"><span class="shared-ranks">7</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button></div>
-            <button class="score-button shared" type="button" data-card data-bucket="common-8"><span class="shared-ranks">8</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
-            <button class="score-button shared" type="button" data-card data-bucket="common-9"><span class="shared-ranks">9</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
-          </div>
-          <div class="card-group">
-            <button class="score-button positive" type="button" data-card data-bucket="panda-faces"><span class="shared-ranks">10 · J · Q · K</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
-          </div>
-          <p id="legacy-count" class="count-note" hidden></p>
+      <section class="card-inputs" aria-label="Cards in rank order">
+        <h2>Cards</h2>
+        <p class="card-legend">D current · D+ detailed</p>
+        <div class="card-grid">
+          <button class="score-button positive" type="button" data-card data-bucket="ace"><span class="shared-ranks">A</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button positive" type="button" data-card data-bucket="two"><span class="shared-ranks">2</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button negative" type="button" data-card data-bucket="panda-three"><span class="shared-ranks">3</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button shared" type="button" data-card data-bucket="common-45"><span class="shared-ranks">4 · 5</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button shared" type="button" data-card data-bucket="six"><span class="shared-ranks">6</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button shared" type="button" data-card data-bucket="seven"><span class="shared-ranks">7</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button shared" type="button" data-card data-bucket="common-8"><span class="shared-ranks">8</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button shared" type="button" data-card data-bucket="common-9"><span class="shared-ranks">9</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+          <button class="score-button positive" type="button" data-card data-bucket="panda-faces"><span class="shared-ranks">10 · J · Q · K</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
         </div>
+        <p id="legacy-count" class="count-note" hidden></p>
+      </section>
         <article class="deck" aria-label="Total cards dealt">
           <div class="tracker-heading"><h2>Cards dealt</h2><output id="deck-total" aria-live="polite">0</output></div>
           <div class="controls">
@@ -60,7 +52,6 @@
             <button class="score-button neutral" type="button" data-counter="deck" data-change="6"><span class="change">+6</span></button>
           </div>
         </article>
-      </section>
 
       <section class="deck-summary" aria-label="Deck information">
         <label class="deck-stat">

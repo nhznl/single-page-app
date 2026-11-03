@@ -3,21 +3,14 @@
 body { min-width: 320px; margin: 0; background: radial-gradient(circle at 50% -10%, #295345 0, #101d18 43rem); }
 button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .app-shell { width: min(1120px, 100%); min-height: 100dvh; margin: auto; padding: max(2rem, env(safe-area-inset-top)) 1.25rem max(1.5rem, env(safe-area-inset-bottom)); }
-header { display: flex; justify-content: flex-end; gap: .6rem; margin: 0 auto 2rem; max-width: 720px; }
+header { display: flex; justify-content: flex-end; gap: .6rem; margin: 0 auto .5rem; max-width: 720px; }
 .session-control { display: flex; align-items: center; gap: .4rem; color: #cbd8d0; font-size: .78rem; font-weight: 700; }
 .eyebrow { grid-column: 1 / -1; margin: 0; color: #d6ba72; font-size: .75rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
-h1, h2 { margin: 0; letter-spacing: -.035em; } h1 { font-size: clamp(2rem, 8vw, 3.25rem); } h2 { font-size: 1.2rem; }
+h2 { margin: 0; letter-spacing: -.035em; font-size: .85rem; color: #cbd8d0; }
 .reset, .undo, .end-session { padding: .55rem .75rem; border: 1px solid #789287; border-radius: .7rem; background: transparent; color: #e7e3d8; font-size: .85rem; }
 .reset:active, .undo:active, .end-session:active { background: #314b41; }.undo:disabled, .end-session:disabled { cursor: default; opacity: .4; }
- .running-totals { display: flex; gap: 1rem; margin-bottom: .75rem; }
-.running-totals > div { display: flex; align-items: center; justify-content: center; gap: .75rem; flex: 1; padding: .75rem; border: 1px solid #45695b; border-radius: .75rem; background: #10231d; }
-.counter-label { color: #b9cec2; font-size: .85rem; font-weight: 900; }
 output { color: #f4ce67; font-size: 2.2rem; font-weight: 800; line-height: 1; }
-.input-columns { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; gap: .75rem; }
 .card-inputs, .deck { min-width: 0; padding: .75rem; border: 1px solid #45695b; border-radius: 1rem; background: rgb(16 35 29 / .88); }
-.input-columns h2 { font-size: .85rem; color: #cbd8d0; }
-.card-group { display: grid; gap: .35rem; margin-top: .5rem; }
-.card-group + .card-group { margin-top: 1rem; padding-top: .65rem; border-top: 1px solid #45695b; }
 .shared { border-color: #596c9e; background: #2d3961; }
 .shared-ranks { font-size: 1.35rem; font-weight: 900; }
 .card-score { display: grid; gap: .15rem; color: #d0d9df; font-size: .7rem; }
@@ -44,12 +37,8 @@ output { color: #f4ce67; font-size: 2.2rem; font-weight: 800; line-height: 1; }
   header { gap: .4rem; margin-bottom: .45rem; }
   .session-control { gap: .25rem; font-size: .66rem; }
   .reset, .undo, .end-session { padding: .4rem .55rem; font-size: .72rem; }
-  .running-totals { gap: .4rem; margin-bottom: .4rem; }
-  .running-totals > div { padding: .45rem; }
-  .input-columns { gap: .4rem; }
   .card-inputs, .deck { padding: .45rem; border-radius: .75rem; }
   .shared-ranks { font-size: 1.1rem; }
-  .card-group + .card-group { margin-top: .65rem; padding-top: .5rem; }
   .deck .controls { gap: .35rem; margin-top: .5rem; }
   header { flex-wrap: wrap; }
   header button { min-height: 44px; }
@@ -66,19 +55,23 @@ output { color: #f4ce67; font-size: 2.2rem; font-weight: 800; line-height: 1; }
   .deck-stat output { font-size: 1.05rem; }
 }
 
- .card-inputs .score-button { min-width: 0; min-height: 88px; padding: .4rem .25rem 2.1rem; }
-.split-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
+ .card-inputs .score-button { min-width: 0; min-height: 72px; padding: .35rem .4rem 1.5rem; flex-direction: row; gap: .65rem; }
 .contributions { position: absolute; right: .25rem; bottom: .25rem; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .15rem; max-width: calc(100% - .5rem); font-size: .65rem; font-variant-numeric: tabular-nums; }
 .contributions > span { padding: .15rem .25rem; border-radius: .3rem; background: #10231d; color: #f4ce67; white-space: nowrap; }
 .contributions .detailed-contribution { color: #bddefa; }
 .card-inputs .bucket-count { top: .25rem; bottom: auto; right: .25rem; }
 .card-legend { margin: .3rem 0; color: #bdcfc5; font-size: .65rem; }
-.running-totals > div { min-width: 0; flex-direction: column; gap: .45rem; }
-.running-totals output { font-size: clamp(1.5rem, 6vw, 2.4rem); letter-spacing: -.04em; overflow-wrap: anywhere; }
-.running-totals .counter-label { font-size: .7rem; }
 .true-count-stat { grid-column: 1 / -1; }
 #legacy-count { margin-top: .65rem; color: #f4ce67; line-height: 1.4; }
-@media (max-width: 360px) {
-  .input-columns { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
-  .deck .controls { grid-template-columns: 1fr; }
-}
+
+.app-shell { max-width: 720px; }
+.card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
+.card-grid > :last-child { grid-column: 1 / -1; }
+.card-score { text-align: left; }
+.deck { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .6rem; align-items: center; margin-top: .4rem; }
+.deck .tracker-heading { padding: 0 .4rem 0 0; border-bottom: 0; border-right: 1px solid #385648; gap: .5rem; }
+.deck .tracker-heading h2 { font-size: .7rem; text-align: center; }
+.deck .tracker-heading output { font-size: 1.8rem; }
+.deck .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: .35rem; }
+.deck .score-button { min-height: 44px; padding: .35rem; }
+.deck .change { font-size: 1.2rem; }

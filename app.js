@@ -53,7 +53,6 @@ function renderDeckStats() {
   const dTrueCountValue = decksRemaining === 0 ? null : totals.dragon / decksRemaining;
   const detailedTotal = detailedDragonTotal();
   const detailedTrueCount = decksRemaining === 0 || detailedTotal === null ? null : detailedTotal / decksRemaining;
-  setOutput("#dragon-detailed-total", detailedTotal === null ? "—" : detailedTotal.toFixed(1));
   setOutput("#dragon-detailed-true-count", detailedTrueCount === null ? "—" : detailedTrueCount.toFixed(2));
   document.querySelector("#dragon-detailed-true-count-stat").classList.toggle("trigger-reached", detailedTrueCount !== null && detailedTrueCount >= betTriggers.dragonDetailed);
   const pTrueCountValue = decksRemaining === 0 ? null : totals.panda / decksRemaining;
@@ -133,10 +132,7 @@ function recordDeckShortcut(change) {
 }
 
 function render() {
-  for (const [counter, total] of Object.entries(totals)) {
-    document.querySelector(`#${counter}-total`).value = total;
-    document.querySelector(`#${counter}-total`).textContent = total;
-  }
+  setOutput("#deck-total", totals.deck);
   document.querySelectorAll("[data-bucket]").forEach((button) => {
     const count = bucketCounts[button.dataset.bucket] || 0;
     const rule = cardRules[button.dataset.bucket];
