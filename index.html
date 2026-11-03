@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=43" />
+    <link rel="stylesheet" href="styles.css?v=44" />
     <title>Card Tracker</title>
   </head>
   <body>
@@ -31,6 +31,11 @@
 
       <section class="main-bets" id="main-bets" aria-label="Next-hand main-bet recommendation">
         <div class="main-bet-heading"><h2>Next hand · main bets</h2><output id="main-bet-choice" aria-live="polite">Insufficient data</output></div>
+        <div class="main-bet-settings">
+          <label>Bank $ <input id="banker-wager" type="number" min="0.01" step="any" inputmode="decimal" value="20" aria-label="Banker bet amount in dollars" /></label>
+          <label>Player $ <input id="player-wager" type="number" min="0.01" step="any" inputmode="decimal" value="10" aria-label="Player bet amount in dollars" /></label>
+          <label>Fee $ <input id="main-bet-fee" type="number" min="0" step="any" inputmode="decimal" value="1" aria-label="Collection fee per hand in dollars" /></label>
+        </div>
         <div class="main-bet-values">
           <div id="banker-ev-stat"><span>Banker EV</span><output id="banker-ev">—</output></div>
           <div id="player-ev-stat"><span>Player EV</span><output id="player-ev">—</output></div>
@@ -90,8 +95,8 @@
       </section>
 
       <aside class="main-bet-notes" aria-label="Main-bet calculation rules">
-        <p class="main-bet-rules">Your table: Dragon pushes Banker; Panda pushes Player. Other wins pay 1:1; opposite bets lose; ties push.</p>
-        <p class="main-bet-rules">Expected return per wager, not a prediction. Dragon/Panda side bets are separate.</p>
+        <p class="main-bet-rules">Standard EZ Baccarat: Dragon pushes Banker; Panda pays Player. Other wins pay 1:1; ties push.</p>
+        <p class="main-bet-rules">Expected return includes the entered collection fee per hand. Dragon/Panda side bets are separate.</p>
       </aside>
         <article class="deck" aria-label="Total cards dealt">
           <div class="tracker-heading"><h2>Cards dealt</h2><output id="deck-total" aria-live="polite">0</output></div>
@@ -113,8 +118,8 @@
         <ol id="research-sessions"></ol>
       </section>
     </main>
-    <script src="main-bets.js?v=43"></script>
-    <script src="research-history.js?v=43"></script>
-    <script src="app.js?v=43"></script>
+    <script src="main-bets.js?v=44"></script>
+    <script src="research-history.js?v=44"></script>
+    <script src="app.js?v=44"></script>
   </body>
 </html>

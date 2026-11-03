@@ -11,7 +11,7 @@
     for (const [bucket, count] of Object.entries(counts)) {
       if (!Number.isInteger(count) || count < 0) return { reason: "Recorded card counts are invalid." };
       if (!count) continue;
-      if (!Object.hasOwn(buckets, bucket)) return { code: "legacy-ranks" };
+      if (!Object.hasOwn(buckets, bucket)) return { reason: "Recorded card values are invalid." };
       recorded += count;
       cards[buckets[bucket]] -= count;
     }
@@ -95,14 +95,21 @@
 
   function calculate(cards) {
     const outcomes = probabilities(cards);
-    // User's table: matching main bet pushes on Dragon/Panda; opposite bet loses.
-    // Other wins pay 1:1 and ties push. These are main-bet returns only.
+    // Standard EZ Baccarat: Banker pushes on Dragon 7; Panda 8 pays Player.
+    // Other wins pay 1:1 and ties push. These are main-bet returns before fees.
     const banker = outcomes.banker - outcomes.dragon - outcomes.player;
-    const player = outcomes.player - outcomes.panda - outcomes.banker;
+    const player = outcomes.player - outcomes.banker;
     return { banker, player, recommendation: recommendation(banker, player), outcomes };
   }
 
-  const api = { remainingShoe, probabilities, recommendation, calculate };
+  function afterFees(result, bankerWager, playerWager, fee) {
+    if (!Number.isFinite(bankerWager) || bankerWager <= 0 || !Number.isFinite(playerWager) || playerWager <= 0 || !Number.isFinite(fee) || fee < 0) return null;
+    const banker = result.banker - fee / bankerWager;
+    const player = result.player - fee / playerWager;
+    return { ...result, banker, player, recommendation: recommendation(banker, player), gross: { banker: result.banker, player: result.player }, wagers: { banker: bankerWager, player: playerWager }, fee, basis: "after-collection", rulesVersion: "standard-ez-v1" };
+  }
+
+  const api = { remainingShoe, probabilities, recommendation, calculate, afterFees };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BaccaratMainBets = api;
 })(globalThis);

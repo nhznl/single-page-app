@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { remainingShoe, probabilities, recommendation, calculate } = require('../main-bets.js');
+const { remainingShoe, probabilities, recommendation, calculate, afterFees } = require('../main-bets.js');
 const shoe = ranks => Array.from({ length: 10 }, (_, n) => ranks.filter(rank => rank === n).length);
 function near(actual, expected, tolerance = 1e-11) { assert(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`); }
 
@@ -52,7 +52,7 @@ test('fresh eight-deck outcomes match published exact combination counts', () =>
   const result = calculate(cards);
   for (const key in expected) near(result.outcomes[key], expected[key]);
   near(result.banker, -0.010183007571);
-  near(result.player, -0.046894031686);
+  near(result.player, expected.player - expected.banker);
   assert.equal(result.recommendation, 'sit-out');
   assert.deepEqual(cards, [128,32,32,32,32,32,32,32,32,32]);
 });
@@ -68,7 +68,7 @@ test('drawing rules match exhaustive physical-card permutations on varied small 
     for (const key in expected) near(actual[key], expected[key]);
     near(actual.banker + actual.player + actual.tie, 1);
     const returns = calculate(shoe(ranks));
-    near(returns.banker + returns.player, -actual.dragon - actual.panda);
+    near(returns.banker + returns.player, -actual.dragon);
   }
 });
 
@@ -80,11 +80,26 @@ test('decision compares with sitting out and does not turn smaller losses into r
   assert.equal(recommendation(-0.04, 0.001), 'player');
 });
 
+test('collection fee changes EV and recommendation based on the wager', () => {
+  const gross = { banker: 0.015, player: -0.01, recommendation: 'banker' };
+  const small = afterFees(gross, 50, 10, 1);
+  near(small.banker, -0.005);
+  near(small.player, -0.11);
+  assert.equal(small.recommendation, 'sit-out');
+  const larger = afterFees(gross, 100, 10, 1);
+  near(larger.banker, 0.005);
+  assert.equal(larger.recommendation, 'banker');
+  assert.equal(larger.gross.banker, 0.015);
+  assert.equal(afterFees(gross, 0, 10, 1), null);
+  assert.equal(afterFees(gross, 100, 10, -1), null);
+  assert.equal(afterFees(gross, NaN, 10, 1), null);
+});
+
 test('composition validation preserves unknown, grouped, invalid and exhausted states', () => {
   const input = { decks: 8, dealt: 0, counts: {} };
   assert.deepEqual(remainingShoe(input).cards, [128,32,32,32,32,32,32,32,32,32]);
   assert.match(remainingShoe({...input, dealt: 2}).reason, /no rank/);
-  assert.equal(remainingShoe({...input, dealt: 2, counts: {'common-45': 2}}).code, 'legacy-ranks');
+  assert.match(remainingShoe({...input, dealt: 2, counts: {unknown: 2}}).reason, /invalid/);
   assert.match(remainingShoe({...input, dealt: 33, counts: {ace: 33}}).reason, /exceeds/);
   assert.match(remainingShoe({...input, counts: {ace: -1}}).reason, /invalid/);
   assert.match(remainingShoe({...input, counts: {ace: 0.5}}).reason, /invalid/);
@@ -107,7 +122,7 @@ test('real depleted shoes can favor either main bet and exact ties still sit out
     const result = calculate(shoe(ranks)), exact = physicalCardReference(ranks);
     assert.equal(result.recommendation, side);
     near(result.banker, exact.banker - exact.dragon - exact.player);
-    near(result.player, exact.player - exact.panda - exact.banker);
+    near(result.player, exact.player - exact.banker);
     assert(result[side] > 0);
   }
   assert.equal(calculate(shoe([9,9,9,9,9,9])).recommendation, 'sit-out');

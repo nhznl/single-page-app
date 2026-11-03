@@ -3,9 +3,12 @@ const historyKey = "card-tracker-history-v2";
 const bucketStorageKey = "card-tracker-bucket-counts-v2";
 const totalDecksStorageKey = "card-tracker-total-decks-v1";
 const sessionDurationStorageKey = "card-tracker-session-duration-v3";
+const bankerWagerKey = "card-tracker-banker-wager-v1";
+const playerWagerKey = "card-tracker-player-wager-v1";
+const mainBetFeeKey = "card-tracker-main-bet-fee-v1";
 const totals = JSON.parse(localStorage.getItem(storageKey) || "{\"dragon\":0,\"panda\":0,\"deck\":0}");
 const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
-const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"common-45\":0,\"common-67\":0,\"common-8\":0,\"common-9\":0,\"panda-plus-one\":0,\"panda-three\":0}");
+const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{}");
 let totalDecks = Number(localStorage.getItem(totalDecksStorageKey) || 8);
 const storedSessionDuration = Number(localStorage.getItem(sessionDurationStorageKey) ?? 25);
 let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Math.max(5, Math.round(storedSessionDuration))) : 25;
@@ -30,13 +33,8 @@ const cardRules = {
   "panda-faces": { dragon: 0, panda: 1, detailedTenths: 9 }
 };
 
-function hasUnsplitCards() {
-  return ["panda-plus-one", "panda-a2", "common-67"].some(key => (bucketCounts[key] || 0) > 0);
-}
-
 function detailedDragonTotal() {
-  if (hasUnsplitCards()) return null;
-  return Object.entries(cardRules).reduce((sum, [key, rule]) => sum + (bucketCounts[key] || 0) * rule.detailedTenths, -(bucketCounts["common-45"] || 0) * 27) / 10;
+  return Object.entries(cardRules).reduce((sum, [key, rule]) => sum + (bucketCounts[key] || 0) * rule.detailedTenths, 0) / 10;
 }
 
 function signed(value, decimals = 0) {
@@ -235,9 +233,8 @@ function undoLastAction() {
   pendingTen = false;
   const lastAction = history.pop();
   if (!lastAction) return;
-  const changes = lastAction.changes || [{ counter: lastAction.counter, change: lastAction.change }];
-  changes.forEach(({ counter, change }) => { totals[counter] -= change; });
-  (lastAction.buckets || []).forEach((bucket) => { bucketCounts[bucket] = Math.max(0, (bucketCounts[bucket] || 0) - 1); });
+  lastAction.changes.forEach(({ counter, change }) => { totals[counter] -= change; });
+  lastAction.buckets.forEach((bucket) => { bucketCounts[bucket] = Math.max(0, (bucketCounts[bucket] || 0) - 1); });
   if (cardSession.active && cardSession.actions.at(-1)?.action === lastAction) {
     cardSession.actions.pop();
     cardSession.cardCount = Math.max(0, cardSession.cardCount - lastAction.sessionCards);
@@ -346,8 +343,30 @@ let mainBetRequestId = 0;
 let mainBetInputKey = null;
 let mainBetView = { phase: "unavailable", result: null, reason: "" };
 
+function mainBetTerms() {
+  const value = selector => {
+    const text = document.querySelector(selector).value;
+    return text === "" ? NaN : Number(text);
+  };
+  return { bankerWager: value("#banker-wager"), playerWager: value("#player-wager"), fee: value("#main-bet-fee") };
+}
+
+for (const [selector, key, fallback] of [["#banker-wager", bankerWagerKey, "20"], ["#player-wager", playerWagerKey, "10"], ["#main-bet-fee", mainBetFeeKey, "1"]]) {
+  const input = document.querySelector(selector);
+  input.value = localStorage.getItem(key) ?? fallback;
+  input.addEventListener("input", event => {
+    localStorage.setItem(key, event.target.value);
+    refreshMainBets();
+  });
+}
+
 function showMainBetView(phase, result = null, reason = "") {
-  const names = { unavailable: "Insufficient data", "new-shoe": "New shoe needed", calculating: "Calculating…", entering: "Hand in progress", pending: "Finish typing 10", error: "Unavailable", "sit-out": "SIT OUT", banker: "BANKER", player: "PLAYER" };
+  if (phase === "ready") {
+    const { bankerWager, playerWager, fee } = mainBetTerms();
+    result = BaccaratMainBets.afterFees(result, bankerWager, playerWager, fee);
+    if (!result) { phase = "unavailable"; reason = "Enter both bet amounts and the collection fee to calculate EV."; }
+  }
+  const names = { unavailable: "Insufficient data", calculating: "Calculating…", entering: "Hand in progress", pending: "Finish typing 10", error: "Unavailable", "sit-out": "SIT OUT", banker: "BANKER", player: "PLAYER" };
   const state = phase === "ready" ? result.recommendation : phase;
   const choice = names[state];
   const panel = document.querySelector("#main-bets");
@@ -357,7 +376,7 @@ function showMainBetView(phase, result = null, reason = "") {
     setOutput(`#${side}-ev`, result ? (Math.abs(result[side]) <= 1e-12 ? "0.000%" : `${signed(result[side] * 100, 3)}%`) : "—");
     document.querySelector(`#${side}-ev-stat`).classList.toggle("positive-edge", Boolean(result && result[side] > 1e-12));
   }
-  const explanation = result ? (state === "sit-out" ? "Neither main bet has a positive expected return." : "Positive expected return; no guaranteed win.") : reason;
+  const explanation = result ? (state === "sit-out" ? "Neither main bet has a positive return after the fee." : "Positive return after the fee; no guaranteed win.") : reason;
   document.querySelector("#main-bet-reason").textContent = explanation;
   document.querySelector("#main-bet-reason").hidden = !explanation;
   const status = document.querySelector("#session-status");
@@ -377,7 +396,7 @@ function refreshMainBets() {
   const input = BaccaratMainBets.remainingShoe({ decks: Number(document.querySelector("#total-decks").value), dealt: totals.deck, counts: bucketCounts });
   if (!input.cards) {
     mainBetInputKey = null;
-    showMainBetView(input.code === "legacy-ranks" ? "new-shoe" : "unavailable", null, input.reason || "");
+    showMainBetView("unavailable", null, input.reason || "");
     return;
   }
   const key = JSON.stringify(input.cards);
@@ -391,7 +410,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=43");
+      mainBetWorker = new Worker("main-bets-worker.js?v=44");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
@@ -424,7 +443,11 @@ function captureResearchSnapshot(withMainBet = false, empty = false) {
   let mainBet = { state: "not-calculated-during-entry" };
   if (withMainBet) {
     const input = BaccaratMainBets.remainingShoe({ decks: totalDecks, dealt: savedTotals.deck, counts: savedBuckets });
-    mainBet = input.cards ? { state: "calculated", ...BaccaratMainBets.calculate(input.cards) } : { state: input.code || "unavailable", reason: input.reason || null };
+    if (input.cards) {
+      const { bankerWager, playerWager, fee } = mainBetTerms();
+      const calculated = BaccaratMainBets.afterFees(BaccaratMainBets.calculate(input.cards), bankerWager, playerWager, fee);
+      mainBet = calculated ? { state: "calculated", ...calculated } : { state: "wager-required", rulesVersion: "standard-ez-v1" };
+    } else mainBet = { state: input.code || "unavailable", reason: input.reason || null, rulesVersion: "standard-ez-v1" };
   }
   return {
     recordedAt: new Date().toISOString(), totalDecks, sessionDurationSeconds: sessionDuration, totals: savedTotals, bucketCounts: savedBuckets, decksRemaining,
@@ -513,7 +536,7 @@ function renderResearch() {
     appendResearchText(row, "p", `${researchTime(session.startedAt)} · ${session.endedAt ? ({ manual: "Ended manually", timer: "Timer ended", "six-cards": "6 cards recorded", reset: "Ended on reset", "reload-interrupted": "Interrupted by reload" }[session.endReason] || session.endReason) : "In progress"}${session.corrections.length ? " · corrected" : ""}`, "research-meta");
     const cards = appendResearchText(row, "div", "", "research-cards");
     session.entries.forEach(entry => {
-      const card = appendResearchText(cards, entry.undoneAt ? "s" : "span", entry.bucket === "panda-faces" && entry.source === "tap" ? "FACE" : entry.label, "research-card");
+      const card = appendResearchText(cards, entry.undoneAt ? "s" : "span", entry.label, "research-card");
       card.title = `${entry.source}${entry.undoneAt ? ` · undone ${researchTime(entry.undoneAt)}` : ""}`;
     });
     if (!session.entries.length) appendResearchText(cards, "span", "No retained entries");
@@ -527,7 +550,7 @@ function renderResearch() {
       const mainBet = snapshot.mainBet.state === "calculated"
         ? { banker: "BANKER", player: "PLAYER", "sit-out": "SIT OUT" }[snapshot.mainBet.recommendation]
         : snapshot.mainBet.state === "not-calculated-during-entry" ? "Hand in progress" : "Unavailable";
-      return `D ${value(tc.dragon)} · D detailed ${value(tc.dragonDetailed)} · P ${value(tc.panda)} · main bets ${mainBet}`;
+      return `D ${value(tc.dragon)} · D detailed ${value(tc.dragonDetailed)} · P ${value(tc.panda)} · recorded main bet ${mainBet}`;
     }
     appendResearchText(details, "p", `Before session: ${describe(before)}`);
     if (after) appendResearchText(details, "p", `After session: ${describe(after)}`);

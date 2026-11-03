@@ -3,11 +3,10 @@
   const copy = value => JSON.parse(JSON.stringify(value));
   const uid = () => root.crypto.randomUUID();
   const now = () => new Date().toISOString();
-  const rules = { bankerDragonPush: true, playerPandaPush: true, otherWins: 1, oppositeBetLoses: true, tiesPush: true };
   function newShoe(baseline, time = now()) {
     return { id: uid(), startedAt: time, frozenAt: null, baseline: copy(baseline), lastSnapshot: copy(baseline), sessions: [], outsideSession: [], qualityNotes: baseline.totals.deck > 0 ? ["Recording began with existing totals; earlier sessions are not available."] : [] };
   }
-  function create(baseline) { return { schemaVersion: 1, appVersion: "43", tableRules: rules, current: newShoe(baseline), frozen: [] }; }
+  function create(baseline) { return { schemaVersion: 1, appVersion: "44", current: newShoe(baseline), frozen: [] }; }
   function validate(state) {
     if (state?.schemaVersion !== 1 || !state.current || !Array.isArray(state.current.sessions) || !Array.isArray(state.frozen)) throw Error("Unsupported research history");
     for (const shoe of [state.current, ...state.frozen]) {
@@ -48,7 +47,7 @@
     if (entry) {
       entry.undoneAt = time;
       if (session) { session.corrections.push({ entryId, at: time }); session.latestAfter = copy(snapshot); }
-    } else state.current.outsideSession.push({ id: uid(), kind: "legacy-undo", recordedAt: time, snapshot: copy(snapshot) });
+    }
     state.current.lastSnapshot = copy(snapshot);
   }
   function freeze(state, finalSnapshot, nextBaseline, time = now()) {

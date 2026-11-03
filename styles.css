@@ -136,3 +136,7 @@ header .session-control { grid-column: auto; }
 .research-card { padding: .3rem .45rem; border-radius: .35rem; background: #f4ce67; color: #10231d; font-weight: 800; }
 s.research-card { opacity: .55; }
 .research-error { padding: .6rem; border: 1px solid #d6ba72; color: #f4ce67; font-size: .8rem; }
+
+.main-bet-settings { display: flex; gap: .5rem; margin-top: .4rem; }
+.main-bet-settings label { display: flex; align-items: center; flex: 1; min-width: 0; gap: .3rem; color: #cbd8d0; font-size: .75rem; font-weight: 700; }
+.main-bet-settings input { width: 100%; min-width: 0; min-height: 36px; padding: .3rem; border: 1px solid #789287; border-radius: .4rem; background: #10231d; color: #f8f4e9; font-size: 16px; }
