@@ -98,12 +98,14 @@ function renderSessionControls() {
   if (!status) return;
   if (!cardSession.active) {
     status.textContent = sessionStatusMessage;
+    refreshMainBets();
     return;
   }
   const secondsRemaining = Math.max(0, Math.ceil((cardSession.expiresAt - Date.now()) / 1000));
   const minutes = String(Math.floor(secondsRemaining / 60)).padStart(2, "0");
   const seconds = String(secondsRemaining % 60).padStart(2, "0");
   status.textContent = `Session active · ${minutes}:${seconds} remaining · ${remaining} card${remaining === 1 ? "" : "s"} available`;
+  refreshMainBets();
 }
 
 function endCardSession(message = "No active card session.") {
@@ -250,7 +252,7 @@ const keyboardCards = {
 
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
-  if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
+  if (event.target.closest?.("input:not([type=checkbox]), textarea, select, [contenteditable]")) return;
   const key = event.key.toUpperCase();
   if (key === "ENTER") {
     event.preventDefault();
@@ -263,6 +265,7 @@ document.addEventListener("keydown", (event) => {
     if (pendingTen) {
       pendingTen = false;
       renderSessionCards();
+      refreshMainBets();
     } else if (cardSession.active && cardSession.actions.at(-1)?.action === history.at(-1)) {
       undoLastAction();
     }
@@ -273,6 +276,7 @@ document.addEventListener("keydown", (event) => {
     updateSessionCountdown();
     pendingTen = true;
     renderSessionCards();
+    refreshMainBets();
     return;
   }
   if (key === "0") {
@@ -287,6 +291,7 @@ document.addEventListener("keydown", (event) => {
   } else if (key.length === 1 && pendingTen) {
     pendingTen = false;
     renderSessionCards();
+    refreshMainBets();
   }
 });
 
@@ -294,16 +299,23 @@ document.querySelector("#reset").addEventListener("click", () => {
   Object.keys(totals).forEach((key) => { totals[key] = 0; });
   Object.keys(bucketCounts).forEach((key) => { bucketCounts[key] = 0; });
   history.length = 0;
+  trackingComplete = false;
+  localStorage.setItem(trackingCompleteKey, "false");
+  document.querySelector("#tracking-complete").checked = false;
   endCardSession("Session reset.");
   render();
 });
 
 document.querySelector("#total-decks").addEventListener("input", (event) => {
   const updatedTotal = Number(event.target.value);
-  if (!Number.isFinite(updatedTotal) || updatedTotal < 1) return;
+  if (!Number.isFinite(updatedTotal) || updatedTotal < 1) {
+    refreshMainBets();
+    return;
+  }
   totalDecks = updatedTotal;
   localStorage.setItem(totalDecksStorageKey, String(totalDecks));
   renderDeckStats();
+  refreshMainBets();
 });
 
 document.querySelector("#session-duration").addEventListener("change", (event) => {
@@ -316,6 +328,84 @@ document.querySelector("#session-duration").addEventListener("change", (event) =
 
 document.querySelector("#end-session").addEventListener("click", () => {
   endCardSession("Session ended early · ready for the next hand.");
+});
+
+const trackingCompleteKey = "card-tracker-complete-shoe-v1";
+let trackingComplete = localStorage.getItem(trackingCompleteKey) === "true";
+let mainBetWorker = null;
+let mainBetRequestId = 0;
+let mainBetInputKey = null;
+let mainBetView = { phase: "unavailable", result: null, reason: "" };
+document.querySelector("#tracking-complete").checked = trackingComplete;
+
+function showMainBetView(phase, result = null, reason = "") {
+  const names = { unavailable: "Insufficient data", calculating: "Calculating…", entering: "Hand in progress", pending: "Finish typing 10", error: "Unavailable", "sit-out": "SIT OUT", banker: "BANKER", player: "PLAYER" };
+  const state = phase === "ready" ? result.recommendation : phase;
+  const choice = names[state];
+  const panel = document.querySelector("#main-bets");
+  panel.dataset.state = state;
+  setOutput("#main-bet-choice", choice);
+  for (const side of ["banker", "player"]) {
+    setOutput(`#${side}-ev`, result ? (Math.abs(result[side]) <= 1e-12 ? "0.000%" : `${signed(result[side] * 100, 3)}%`) : "—");
+    document.querySelector(`#${side}-ev-stat`).classList.toggle("positive-edge", Boolean(result && result[side] > 1e-12));
+  }
+  const explanation = result ? (state === "sit-out" ? "Neither main bet has a positive expected return. Sitting out returns 0%." : `${choice} has a positive expected return; an individual hand can still lose.`) : reason;
+  document.querySelector("#main-bet-reason").textContent = explanation;
+  const status = document.querySelector("#session-status");
+  status.dataset.mainBetState = state;
+  if (!cardSession.active) {
+    status.textContent = result ? `Main bets: ${choice}${state === "sit-out" ? " · No positive edge" : " · Positive edge"}` : `Main bets: ${choice}`;
+  }
+}
+
+function refreshMainBets() {
+  if (cardSession.active || pendingTen) {
+    mainBetInputKey = null;
+    showMainBetView(cardSession.active ? "entering" : "pending", null, "Finish entering this hand before comparing the next bets.");
+    return;
+  }
+  const input = BaccaratMainBets.remainingShoe({ decks: Number(document.querySelector("#total-decks").value), dealt: totals.deck, counts: bucketCounts, complete: trackingComplete });
+  if (!input.cards) {
+    mainBetInputKey = null;
+    showMainBetView("unavailable", null, input.reason);
+    return;
+  }
+  const key = JSON.stringify(input.cards);
+  if (key === mainBetInputKey) {
+    showMainBetView(mainBetView.phase, mainBetView.result, mainBetView.reason);
+    return;
+  }
+  mainBetInputKey = key;
+  const id = ++mainBetRequestId;
+  mainBetView = { phase: "calculating", result: null, reason: "Calculating next-hand returns from the remaining card values." };
+  showMainBetView(mainBetView.phase, null, mainBetView.reason);
+  try {
+    if (!mainBetWorker) {
+      mainBetWorker = new Worker("main-bets-worker.js");
+      mainBetWorker.onmessage = ({ data }) => {
+        if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
+        mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
+        showMainBetView(mainBetView.phase, mainBetView.result, mainBetView.reason);
+      };
+      mainBetWorker.onerror = (event) => {
+        event.preventDefault();
+        mainBetWorker.terminate();
+        mainBetWorker = null;
+        mainBetView = { phase: "error", result: null, reason: "Calculation unavailable. Reload to try again." };
+        if (mainBetInputKey !== null && !cardSession.active && !pendingTen) showMainBetView("error", null, mainBetView.reason);
+      };
+    }
+    mainBetWorker.postMessage({ id, cards: input.cards });
+  } catch {
+    mainBetView = { phase: "error", result: null, reason: "Calculation unavailable. Reload to try again." };
+    showMainBetView("error", null, mainBetView.reason);
+  }
+}
+
+document.querySelector("#tracking-complete").addEventListener("change", (event) => {
+  trackingComplete = event.target.checked;
+  localStorage.setItem(trackingCompleteKey, String(trackingComplete));
+  refreshMainBets();
 });
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");

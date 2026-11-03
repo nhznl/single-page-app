@@ -83,7 +83,19 @@
         </div>
         <p class="count-note">Running counts can be negative. Triggers are reference points for the published 8-deck systems, not guarantees.</p>
       </section>
+      <section class="main-bets" id="main-bets" aria-label="Next-hand main-bet recommendation">
+        <div class="main-bet-heading"><h2>Next hand · main bets</h2><output id="main-bet-choice" aria-live="polite">Insufficient data</output></div>
+        <div class="main-bet-values">
+          <div id="banker-ev-stat"><span>Banker EV</span><output id="banker-ev">—</output></div>
+          <div id="player-ev-stat"><span>Player EV</span><output id="player-ev">—</output></div>
+        </div>
+        <p id="main-bet-reason" aria-live="polite"></p>
+        <label class="tracking-confirmation"><input id="tracking-complete" type="checkbox" />All removed cards recorded, including burns</label>
+        <p class="main-bet-rules">Your table: Dragon pushes Banker; Panda pushes Player. Other wins pay 1:1; opposite bets lose; ties push.</p>
+        <p class="main-bet-rules">Expected return per wager, not a prediction. Dragon/Panda side bets are separate.</p>
+      </section>
     </main>
+    <script src="main-bets.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
