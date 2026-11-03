@@ -27,7 +27,10 @@
 
       <section class="card-inputs" aria-label="Cards in rank order">
         <h2>Cards</h2>
-        <p class="card-legend">D current · D+ detailed</p>
+        <div class="card-session-line">
+          <p class="card-legend">D current · D+ detailed</p>
+          <div id="session-cards" class="session-cards" role="status" aria-label="Cards entered this session" aria-live="polite" aria-atomic="true"></div>
+        </div>
         <div class="card-grid">
           <button class="score-button positive" type="button" data-card data-bucket="ace"><span class="shared-ranks">A</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
           <button class="score-button positive" type="button" data-card data-bucket="two"><span class="shared-ranks">2</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>

@@ -10,7 +10,7 @@ let totalDecks = Number(localStorage.getItem(totalDecksStorageKey) || 8);
 const storedSessionDuration = Number(localStorage.getItem(sessionDurationStorageKey) ?? 25);
 let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Math.max(5, Math.round(storedSessionDuration))) : 25;
 const sessionCardLimit = 6;
-const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null };
+const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null, actions: [] };
 let sessionStatusMessage = "No active card session.";
 const betTriggers = { dragon: 4, dragonDetailed: 10, panda: 11 };
 
@@ -67,7 +67,21 @@ function renderDeckStats() {
   document.querySelector("#panda-true-count-stat").classList.toggle("trigger-reached", pTrueCountValue !== null && pTrueCountValue >= betTriggers.panda);
 }
 
+function renderSessionCards() {
+  const list = document.querySelector("#session-cards");
+  const labels = cardSession.active ? cardSession.actions.map(({ label }) => label) : [];
+  if (Array.from(list.children, card => card.textContent).join("|") === labels.join("|")) return;
+  list.replaceChildren();
+  labels.forEach((label) => {
+    const card = document.createElement("span");
+    card.className = "session-card";
+    card.textContent = label;
+    list.append(card);
+  });
+}
+
 function renderSessionControls() {
+  renderSessionCards();
   const remaining = Math.max(0, sessionCardLimit - cardSession.cardCount);
   document.querySelector("#end-session").disabled = !cardSession.active;
   document.querySelectorAll(".deck .score-button").forEach((button) => {
@@ -95,6 +109,7 @@ function endCardSession(message = "No active card session.") {
   cardSession.active = false;
   cardSession.cardCount = 0;
   cardSession.expiresAt = 0;
+  cardSession.actions.length = 0;
   sessionStatusMessage = message;
   renderSessionControls();
 }
@@ -113,6 +128,7 @@ function startCardSession() {
   if (!cardSession.active) {
     cardSession.active = true;
     cardSession.cardCount = 0;
+    cardSession.actions.length = 0;
     cardSession.expiresAt = Date.now() + sessionDuration * 1000;
     sessionStatusMessage = "";
     clearInterval(cardSession.timerId);
@@ -166,7 +182,13 @@ function render() {
 function applyChanges(changes, buckets = [], sessionCards = 0) {
   changes.forEach(({ counter, change }) => { totals[counter] += change; });
   buckets.forEach((bucket) => { bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1; });
-  history.push({ changes, buckets, sessionCards });
+  const action = { changes, buckets, sessionCards };
+  history.push(action);
+  if (cardSession.active && sessionCards > 0) {
+    const button = buckets.length ? document.querySelector(`[data-bucket="${buckets[0]}"]`) : null;
+    const label = button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${sessionCards}`;
+    cardSession.actions.push({ action, label });
+  }
   if (cardSession.active && cardSession.cardCount >= sessionCardLimit) {
     endCardSession("6 cards recorded · ready for the next hand.");
   }
@@ -199,7 +221,8 @@ document.querySelector("#undo").addEventListener("click", () => {
   const changes = lastAction.changes || [{ counter: lastAction.counter, change: lastAction.change }];
   changes.forEach(({ counter, change }) => { totals[counter] -= change; });
   (lastAction.buckets || []).forEach((bucket) => { bucketCounts[bucket] = Math.max(0, (bucketCounts[bucket] || 0) - 1); });
-  if (cardSession.active && lastAction.sessionCards) {
+  if (cardSession.active && cardSession.actions.at(-1)?.action === lastAction) {
+    cardSession.actions.pop();
     cardSession.cardCount = Math.max(0, cardSession.cardCount - lastAction.sessionCards);
   }
   render();

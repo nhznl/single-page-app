@@ -93,3 +93,8 @@ header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 .three-cards .shared-ranks { font-size: 1rem; }
 .three-cards .card-score { font-size: .65rem; text-align: center; gap: .05rem; }
 #legacy-45-count { margin-top: .5rem; }
+
+.card-session-line { display: flex; align-items: center; gap: .45rem; min-height: 1.1rem; margin: .15rem 0; }
+.card-session-line .card-legend { margin: 0; flex-shrink: 0; }
+.session-cards { display: flex; flex: 1; flex-wrap: wrap; justify-content: center; gap: .2rem; min-width: 0; }
+.session-card { display: inline-block; padding: .05rem .25rem; border-radius: .25rem; background: #f4ce67; color: #10231d; font-size: .65rem; font-weight: 900; line-height: 1.2; }
