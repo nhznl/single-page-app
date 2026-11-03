@@ -119,7 +119,7 @@ test('browser scripts and offline cache use the same release version', () => {
   const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const sw = read('service-worker.js');
   const version = sw.match(/card-tracker-v(\d+)/)[1];
-  for (const asset of ['app.js', 'main-bets.js', 'styles.css']) {
+  for (const asset of ['app.js', 'main-bets.js', 'research-history.js', 'styles.css']) {
     assert(read('index.html').includes(`${asset}?v=${version}`), `${asset} must bypass the previous release's HTTP cache`);
     assert(sw.includes(`"${asset}?v=${version}"`), `${asset} must be cached for offline use`);
   }

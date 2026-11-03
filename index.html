@@ -9,11 +9,17 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=41" />
+    <link rel="stylesheet" href="styles.css?v=42" />
     <title>Card Tracker</title>
   </head>
   <body>
     <main class="app-shell">
+      <nav class="view-tabs" role="tablist" aria-label="Tracker views">
+        <button id="tracker-tab" type="button" role="tab" aria-selected="true" aria-controls="tracker-panel">Tracker</button>
+        <button id="research-tab" type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="research-panel">Session history</button>
+      </nav>
+      <p id="research-error" class="research-error" role="alert" hidden></p>
+      <section id="tracker-panel" role="tabpanel" aria-labelledby="tracker-tab">
       <header>
         <label class="session-control">
           <span>Session (sec)</span>
@@ -98,8 +104,17 @@
             <button class="score-button neutral" type="button" data-counter="deck" data-change="6"><span class="change">+6</span></button>
           </div>
         </article>
+      </section>
+      <section id="research-panel" role="tabpanel" aria-labelledby="research-tab" hidden>
+        <div class="research-toolbar"><h2>Session history</h2><button id="export-research" type="button">Export JSON</button></div>
+        <label class="research-picker" for="research-shoe">List <select id="research-shoe"></select></label>
+        <p id="research-summary"></p>
+        <p class="research-local-note">Saved on this device. Reset freezes the current list and starts a new one. Export a copy for research.</p>
+        <ol id="research-sessions"></ol>
+      </section>
     </main>
-    <script src="main-bets.js?v=41"></script>
-    <script src="app.js?v=41"></script>
+    <script src="main-bets.js?v=42"></script>
+    <script src="research-history.js?v=42"></script>
+    <script src="app.js?v=42"></script>
   </body>
 </html>

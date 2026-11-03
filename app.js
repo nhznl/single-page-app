@@ -10,7 +10,7 @@ let totalDecks = Number(localStorage.getItem(totalDecksStorageKey) || 8);
 const storedSessionDuration = Number(localStorage.getItem(sessionDurationStorageKey) ?? 25);
 let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Math.max(5, Math.round(storedSessionDuration))) : 25;
 const sessionCardLimit = 6;
-const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null, actions: [] };
+const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null, actions: [], researchId: null };
 let sessionStatusMessage = "No active card session.";
 let pendingTen = false;
 const betTriggers = { dragon: 4, dragonDetailed: 10, panda: 11 };
@@ -108,7 +108,11 @@ function renderSessionControls() {
   refreshMainBets();
 }
 
-function endCardSession(message = "No active card session.") {
+function endCardSession(message = "No active card session.", reason = "manual") {
+  if (cardSession.active && cardSession.researchId) {
+    BaccaratResearch.close(researchState, cardSession.researchId, reason, captureResearchSnapshot(true));
+  }
+  cardSession.researchId = null;
   clearInterval(cardSession.timerId);
   cardSession.timerId = null;
   cardSession.active = false;
@@ -118,12 +122,14 @@ function endCardSession(message = "No active card session.") {
   pendingTen = false;
   sessionStatusMessage = message;
   renderSessionControls();
+  saveResearch();
+  renderResearch();
 }
 
 function updateSessionCountdown() {
   if (!cardSession.active) return;
   if (Date.now() >= cardSession.expiresAt) {
-    endCardSession("Session ended · ready for the next hand.");
+    endCardSession("Session ended · ready for the next hand.", "timer");
     return;
   }
   renderSessionControls();
@@ -133,6 +139,7 @@ function startCardSession() {
   updateSessionCountdown();
   if (cardSession.active && cardSession.cardCount >= sessionCardLimit) return false;
   if (!cardSession.active) {
+    cardSession.researchId = BaccaratResearch.begin(researchState, captureResearchSnapshot(true), sessionDuration);
     cardSession.active = true;
     cardSession.cardCount = 0;
     cardSession.actions.length = 0;
@@ -164,16 +171,13 @@ function render() {
     button.querySelector(".detailed-impact").textContent = `D+ ${signed(rule.detailedTenths / 10, 1)}`;
     button.querySelector(".bucket-count").textContent = String(count);
   });
-  localStorage.setItem(storageKey, JSON.stringify(totals));
-  localStorage.setItem(historyKey, JSON.stringify(history));
-  localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
-  localStorage.setItem(totalDecksStorageKey, String(totalDecks));
-  localStorage.setItem(sessionDurationStorageKey, String(sessionDuration));
   document.querySelector("#total-decks").value = totalDecks;
   document.querySelector("#session-duration").value = sessionDuration;
   renderDeckStats();
   renderSessionControls();
   document.querySelector("#undo").disabled = history.length === 0;
+  saveResearch();
+  renderResearch();
 }
 
 function applyChanges(changes, buckets = [], sessionCards = 0, cardLabel = null) {
@@ -186,8 +190,17 @@ function applyChanges(changes, buckets = [], sessionCards = 0, cardLabel = null)
     const label = cardLabel ?? (button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${sessionCards}`);
     cardSession.actions.push({ action, label });
   }
+  const pointValues = { ace: 1, two: 2, "panda-three": 3, four: 4, five: 5, six: 6, seven: 7, "common-8": 8, "common-9": 9, "panda-faces": 0 };
+  const bucket = buckets[0] || null;
+  const button = bucket ? document.querySelector(`[data-bucket="${bucket}"]`) : null;
+  const label = cardLabel ?? (button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${changes.find(item => item.counter === "deck").change}`);
+  action.researchEntryId = BaccaratResearch.record(researchState, cardSession.active ? cardSession.researchId : null, {
+    kind: bucket ? "card" : "unknown", label, bucket, pointValue: bucket ? pointValues[bucket] : null,
+    count: bucket ? 1 : changes.find(item => item.counter === "deck").change,
+    source: cardLabel ? "keyboard" : bucket ? "tap" : "quantity-shortcut", rank: bucket === "panda-faces" && !cardLabel ? null : bucket ? label : null
+  }, captureResearchSnapshot(false));
   if (cardSession.active && cardSession.cardCount >= sessionCardLimit) {
-    endCardSession("6 cards recorded · ready for the next hand.");
+    endCardSession("6 cards recorded · ready for the next hand.", "six-cards");
   }
   render();
 }
@@ -229,6 +242,7 @@ function undoLastAction() {
     cardSession.actions.pop();
     cardSession.cardCount = Math.max(0, cardSession.cardCount - lastAction.sessionCards);
   }
+  BaccaratResearch.undo(researchState, lastAction.researchEntryId, captureResearchSnapshot(!cardSession.active));
   render();
 }
 
@@ -280,14 +294,20 @@ function handleCardKey(key) {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat || document.querySelector("#tracker-panel").hidden) return;
   if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
   const key = event.key.toUpperCase();
+  if (event.target.closest?.("[role=tab]") && ["ENTER", " "].includes(key)) return;
   if (keyboardCards[key] || ["1", "0", "ENTER", "BACKSPACE", "DELETE"].includes(key)) event.preventDefault();
   handleCardKey(key);
 });
 
 document.querySelector("#reset").addEventListener("click", () => {
+  if (cardSession.active) endCardSession("Session reset.", "reset");
+  const candidate = BaccaratResearch.freeze(researchState, captureResearchSnapshot(true), captureResearchSnapshot(true, true));
+  if (!saveResearch(candidate)) return;
+  researchState = candidate;
+  document.querySelector("#research-shoe").value = "";
   Object.keys(totals).forEach((key) => { totals[key] = 0; });
   Object.keys(bucketCounts).forEach((key) => { bucketCounts[key] = 0; });
   history.length = 0;
@@ -305,6 +325,8 @@ document.querySelector("#total-decks").addEventListener("input", (event) => {
   localStorage.setItem(totalDecksStorageKey, String(totalDecks));
   renderDeckStats();
   refreshMainBets();
+  researchState.current.lastSnapshot = captureResearchSnapshot(!cardSession.active);
+  saveResearch();
 });
 
 document.querySelector("#session-duration").addEventListener("change", (event) => {
@@ -369,7 +391,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=41");
+      mainBetWorker = new Worker("main-bets-worker.js?v=42");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
@@ -389,6 +411,164 @@ function refreshMainBets() {
     showMainBetView("error", null, mainBetView.reason);
   }
 }
+
+const researchStorageKey = "card-tracker-research-v1";
+let researchWritable = true;
+let researchReadBackup = null;
+
+function captureResearchSnapshot(withMainBet = false, empty = false) {
+  const savedTotals = empty ? { dragon: 0, panda: 0, deck: 0 } : { ...totals };
+  const savedBuckets = empty ? {} : { ...bucketCounts };
+  const decksRemaining = Math.max(0, totalDecks - savedTotals.deck / 52);
+  const detailed = empty ? 0 : detailedDragonTotal();
+  let mainBet = { state: "not-calculated-during-entry" };
+  if (withMainBet) {
+    const input = BaccaratMainBets.remainingShoe({ decks: totalDecks, dealt: savedTotals.deck, counts: savedBuckets });
+    mainBet = input.cards ? { state: "calculated", ...BaccaratMainBets.calculate(input.cards) } : { state: input.code || "unavailable", reason: input.reason || null };
+  }
+  return {
+    recordedAt: new Date().toISOString(), totalDecks, sessionDurationSeconds: sessionDuration, totals: savedTotals, bucketCounts: savedBuckets, decksRemaining,
+    runningCounts: { dragon: savedTotals.dragon, dragonDetailed: detailed, panda: savedTotals.panda },
+    trueCounts: { dragon: decksRemaining ? savedTotals.dragon / decksRemaining : null, dragonDetailed: decksRemaining && detailed !== null ? detailed / decksRemaining : null, panda: decksRemaining ? savedTotals.panda / decksRemaining : null },
+    mainBet
+  };
+}
+
+function researchFingerprint(snapshot) {
+  return JSON.stringify([snapshot.totalDecks, snapshot.totals, Object.entries(snapshot.bucketCounts).filter(([, count]) => count !== 0).sort(([a], [b]) => a.localeCompare(b))]);
+}
+
+let researchState;
+try {
+  const raw = localStorage.getItem(researchStorageKey);
+  researchReadBackup = raw;
+  researchState = raw ? BaccaratResearch.validate(JSON.parse(raw)) : BaccaratResearch.create(captureResearchSnapshot(true));
+  if (raw && researchFingerprint(researchState.current.lastSnapshot) !== researchFingerprint(captureResearchSnapshot(false))) {
+    researchState.current.qualityNotes.push(`Tracker state differed from the last saved research snapshot on ${new Date().toISOString()}. Earlier research records were preserved.`);
+  }
+  BaccaratResearch.recover(researchState, captureResearchSnapshot(true));
+} catch {
+  researchWritable = false;
+  researchState = BaccaratResearch.create(captureResearchSnapshot(true));
+  showResearchError("Saved research history could not be read. Export a backup before resetting; existing stored history has been preserved.");
+}
+
+function showResearchError(message) {
+  const output = document.querySelector("#research-error");
+  output.textContent = message;
+  output.hidden = !message;
+}
+
+function saveResearch(candidate = researchState) {
+  try {
+    // Save current tracker values before the journal, so a reload can audit coverage.
+    localStorage.setItem(storageKey, JSON.stringify(totals));
+    localStorage.setItem(historyKey, JSON.stringify(history));
+    localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
+    localStorage.setItem(totalDecksStorageKey, String(totalDecks));
+    localStorage.setItem(sessionDurationStorageKey, String(sessionDuration));
+    if (!researchWritable) return false;
+    localStorage.setItem(researchStorageKey, JSON.stringify(candidate));
+    showResearchError("");
+    return true;
+  } catch {
+    showResearchError("Research history could not be saved. Export JSON now. Reset is blocked until history can be saved; no frozen lists are discarded.");
+    return false;
+  }
+}
+
+function researchTime(iso) { return new Date(iso).toLocaleString(); }
+function appendResearchText(parent, tag, text, className = "") {
+  const element = document.createElement(tag);
+  element.textContent = text;
+  if (className) element.className = className;
+  parent.append(element);
+  return element;
+}
+
+function renderResearch() {
+  if (document.querySelector("#research-panel").hidden) return;
+  const picker = document.querySelector("#research-shoe");
+  const previous = picker.value;
+  const shoes = [researchState.current, ...researchState.frozen.slice().reverse()];
+  picker.replaceChildren();
+  shoes.forEach((shoe) => {
+    const option = document.createElement("option");
+    option.value = shoe.id;
+    option.textContent = `${shoe.frozenAt ? "Frozen" : "Current"} · ${researchTime(shoe.startedAt)} · ${shoe.sessions.length} session${shoe.sessions.length === 1 ? "" : "s"}`;
+    picker.append(option);
+  });
+  picker.value = shoes.some(shoe => shoe.id === previous) ? previous : researchState.current.id;
+  const shoe = shoes.find(item => item.id === picker.value);
+  const summary = document.querySelector("#research-summary");
+  summary.textContent = `${shoe.frozenAt ? `Frozen ${researchTime(shoe.frozenAt)}` : "Current list · recording"} · ${shoe.sessions.length} session${shoe.sessions.length === 1 ? "" : "s"}`;
+  const list = document.querySelector("#research-sessions");
+  list.replaceChildren();
+  if (!shoe.sessions.length) appendResearchText(list, "li", "No sessions recorded in this list yet.", "research-empty");
+  shoe.sessions.forEach((session, index) => {
+    const row = appendResearchText(list, "li", "", "research-session");
+    const entries = session.entries.filter(entry => !entry.undoneAt);
+    const count = entries.reduce((total, entry) => total + entry.count, 0);
+    appendResearchText(row, "h3", `Session ${index + 1} · ${count} cards`);
+    appendResearchText(row, "p", `${researchTime(session.startedAt)} · ${session.endedAt ? ({ manual: "Ended manually", timer: "Timer ended", "six-cards": "6 cards recorded", reset: "Ended on reset", "reload-interrupted": "Interrupted by reload" }[session.endReason] || session.endReason) : "In progress"}${session.corrections.length ? " · corrected" : ""}`, "research-meta");
+    const cards = appendResearchText(row, "div", "", "research-cards");
+    session.entries.forEach(entry => {
+      const card = appendResearchText(cards, entry.undoneAt ? "s" : "span", entry.label, "research-card");
+      card.title = `${entry.source}${entry.undoneAt ? ` · undone ${researchTime(entry.undoneAt)}` : ""}`;
+    });
+    if (!session.entries.length) appendResearchText(cards, "span", "No retained entries");
+    const details = appendResearchText(row, "details", "");
+    appendResearchText(details, "summary", "True counts and recommendation");
+    const before = session.beforeSession;
+    const after = session.latestAfter || session.afterSession;
+    function describe(snapshot) {
+      const tc = snapshot.trueCounts;
+      const value = n => n === null ? "—" : n.toFixed(2);
+      const mainBet = snapshot.mainBet.state === "calculated"
+        ? { banker: "BANKER", player: "PLAYER", "sit-out": "SIT OUT" }[snapshot.mainBet.recommendation]
+        : snapshot.mainBet.state === "not-calculated-during-entry" ? "Hand in progress" : "Unavailable";
+      return `D ${value(tc.dragon)} · D detailed ${value(tc.dragonDetailed)} · P ${value(tc.panda)} · main bets ${mainBet}`;
+    }
+    appendResearchText(details, "p", `Before session: ${describe(before)}`);
+    if (after) appendResearchText(details, "p", `After session: ${describe(after)}`);
+  });
+  if (shoe.outsideSession.length) {
+    const row = appendResearchText(list, "li", "", "research-session");
+    appendResearchText(row, "h3", "Outside-session changes");
+    shoe.outsideSession.forEach(entry => appendResearchText(row, "p", `${researchTime(entry.recordedAt)} · ${entry.label || "Earlier action undone"}${entry.undoneAt ? " · undone" : ""}`));
+  }
+  shoe.qualityNotes.forEach(note => appendResearchText(list, "li", note, "research-meta"));
+}
+
+function selectView(research) {
+  document.querySelector("#tracker-panel").hidden = research;
+  document.querySelector("#research-panel").hidden = !research;
+  document.querySelector("#tracker-tab").setAttribute("aria-selected", String(!research));
+  document.querySelector("#tracker-tab").tabIndex = research ? -1 : 0;
+  document.querySelector("#research-tab").tabIndex = research ? 0 : -1;
+  document.querySelector("#research-tab").setAttribute("aria-selected", String(research));
+  renderResearch();
+}
+document.querySelector("#tracker-tab").addEventListener("click", () => selectView(false));
+document.querySelector("#research-tab").addEventListener("click", () => selectView(true));
+document.querySelector(".view-tabs").addEventListener("keydown", event => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const research = event.key === "End" || (event.key !== "Home" && document.querySelector("#research-panel").hidden);
+  selectView(research);
+  document.querySelector(research ? "#research-tab" : "#tracker-tab").focus();
+});
+document.querySelector("#research-shoe").addEventListener("change", renderResearch);
+document.querySelector("#export-research").addEventListener("click", () => {
+  const payload = { exportedAt: new Date().toISOString(), ...researchState };
+  if (!researchWritable) payload.unreadableStoredBackup = researchReadBackup;
+  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `card-tracker-research-${new Date().toISOString().replaceAll(":", "-")}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
 render();

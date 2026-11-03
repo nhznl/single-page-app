@@ -22,6 +22,14 @@ The counters work offline once the page has been opened online at least once.
 
 Tap card buttons on mobile. With a physical keyboard, enter A, 2–9, 10, J, Q, or K; lowercase works too. Keyboard entry and card taps share one session. `10` counts as one card; an unfinished `1` waits for `0`. Backspace/Delete removes the latest active-session entry, and Enter ends the session. **End Session** and **Undo** are beside the Cards heading. Cards dealt shortcuts are at the bottom of the page.
 
+## Session history and research export
+
+Open **Session history** to see each session's cards in entry order. **Reset all totals** freezes that list and begins a new one; choose an older frozen list from the selector to review it. Session entries survive reloads. A session interrupted by reloading is labeled accordingly. Undo keeps a crossed-out entry and an audit trail rather than erasing the original input.
+
+**Export JSON** downloads all current and frozen lists, timestamps, input sources, session end reasons, and before/after counts and main-bet calculations. These are recorded inputs and calculated estimates; player/banker card allocation and actual hand results are not captured. Tapping the combined 10/J/Q/K button records that group (point value zero); physical keyboard entry preserves the specific rank. Quantity-only shortcuts record an unknown value, never an inferred card. Existing totals become the starting baseline; sessions from before this update cannot be reconstructed.
+
+History is stored only in this browser on this device. Export periodically to keep an independent copy; clearing browser data removes local history. A storage failure displays a warning and blocks Reset to protect the lists.
+
 ## Next-hand main-bet comparison
 
 After a card session ends, the status row shows **BANKER**, **PLAYER**, or **SIT OUT**. The compact panel above the cards shows both expected returns and any reason the comparison is unavailable. A side is recommended only when its expected return is positive; otherwise the recommendation is to sit out the main bets. Dragon/Panda side-bet signals remain separate.
@@ -37,7 +45,7 @@ The engine enumerates deals without replacement over baccarat point values and a
 Run the dependency-free calculation tests:
 
 ```sh
-node --test tests/main-bets.test.cjs
+node --test tests/*.test.cjs
 ```
 
 These compare the full eight-deck probabilities with the published combination counts, compare varied small shoes with independent exhaustive enumeration of physical cards, and check positive/negative/zero recommendations and input coverage.
