@@ -1,10 +1,10 @@
-const cacheName = "card-tracker-v35";
-const files = ["./", "index.html", "styles.css?v=35", "app.js?v=35", "main-bets.js?v=35", "main-bets-worker.js?v=35", "manifest.webmanifest", "icon.svg"];
-self.addEventListener("install", (event) => event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll(files)).then(() => self.skipWaiting())));
+const cacheName = "card-tracker-v36";
+const files = ["./", "index.html", "styles.css?v=36", "app.js?v=36", "main-bets.js?v=36", "main-bets-worker.js?v=36", "manifest.webmanifest", "icon.svg"];
+self.addEventListener("install", (event) => event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll(files.map((file) => new Request(file, { cache: "reload" })))).then(() => self.skipWaiting())));
 self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== cacheName).map((key) => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  event.respondWith(fetch(event.request).then((response) => {
+  event.respondWith(fetch(event.request, { cache: "no-cache" }).then((response) => {
     if (response.ok && new URL(event.request.url).origin === location.origin) caches.open(cacheName).then((cache) => cache.put(event.request, response.clone()));
     return response;
   }).catch(() => caches.match(event.request)));

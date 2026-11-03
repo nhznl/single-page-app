@@ -376,7 +376,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=35");
+      mainBetWorker = new Worker("main-bets-worker.js?v=36");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
