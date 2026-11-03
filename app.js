@@ -167,9 +167,6 @@ function render() {
     button.querySelector(".current-impact").textContent = `${rule.dragon === 0 ? "" : `D ${signed(rule.dragon)} · `}P ${signed(rule.panda)}`;
     button.querySelector(".detailed-impact").textContent = `D+ ${signed(rule.detailedTenths / 10, 1)}`;
     button.querySelector(".bucket-count").textContent = String(count);
-    button.querySelector(".current-contribution").hidden = rule.dragon === 0;
-    button.querySelector(".current-contribution").textContent = `D ${signed(count * rule.dragon)}`;
-    button.querySelector(".detailed-contribution").textContent = `D+ ${signed(count * rule.detailedTenths / 10, 1)}`;
   });
   localStorage.setItem(storageKey, JSON.stringify(totals));
   localStorage.setItem(historyKey, JSON.stringify(history));
@@ -460,7 +457,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=37");
+      mainBetWorker = new Worker("main-bets-worker.js?v=38");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };

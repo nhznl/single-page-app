@@ -55,10 +55,7 @@ output { color: #f4ce67; font-size: 2.2rem; font-weight: 800; line-height: 1; }
   .deck-stat output { font-size: 1.05rem; }
 }
 
- .card-inputs .score-button { min-width: 0; min-height: 70px; padding: .35rem .4rem 1.5rem; flex-direction: row; gap: .65rem; }
-.contributions { position: absolute; right: .25rem; bottom: .25rem; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .15rem; max-width: calc(100% - .5rem); font-size: .65rem; font-variant-numeric: tabular-nums; }
-.contributions > span { padding: .15rem .25rem; border-radius: .3rem; background: #10231d; color: #f4ce67; white-space: nowrap; }
-.contributions .detailed-contribution { color: #bddefa; }
+ .card-inputs .score-button { min-width: 0; min-height: 70px; padding: .4rem; flex-direction: row; gap: .65rem; }
 .card-inputs .bucket-count { top: .25rem; bottom: auto; right: .25rem; }
 .card-legend { margin: .3rem 0; color: #bdcfc5; font-size: .65rem; }
 .true-count-stat { grid-column: 1 / -1; }
@@ -87,7 +84,7 @@ header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 .card-inputs [data-emphasis] .bucket-count { background: #10231d; border-color: #10231d; }
 
 .three-cards { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
-.three-cards .score-button { flex-direction: column; gap: .05rem; padding: .1rem .1rem 1.4rem; }
+.three-cards .score-button { flex-direction: column; gap: .05rem; padding: .3rem .1rem; }
 .three-cards .shared-ranks { font-size: 1rem; }
 .three-cards .card-score { font-size: .65rem; text-align: center; gap: .05rem; }
 
