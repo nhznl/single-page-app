@@ -17,7 +17,7 @@
       <header>
         <label class="session-control">
           <span>Session (sec)</span>
-          <input id="session-duration" type="number" min="5" max="120" step="1" inputmode="numeric" value="20" />
+          <input id="session-duration" type="number" min="5" max="120" step="1" inputmode="numeric" value="25" />
         </label>
         <button class="end-session" id="end-session" type="button" disabled>End Session</button>
         <button class="undo" id="undo" type="button" disabled>Undo</button>
@@ -25,44 +25,32 @@
       </header>
       <p class="session-status" id="session-status" aria-live="polite">No active card session.</p>
 
-      <section class="common-controls" aria-label="Shared D and P card buckets">
-        <button class="score-button shared" type="button" data-rule="common-45" data-bucket="common-45">
-          <span class="shared-ranks">4 · 5</span><span>D −1 · P −2</span><span class="bucket-count">0</span>
-        </button>
-        <button class="score-button shared" type="button" data-rule="common-67" data-bucket="common-67">
-          <span class="shared-ranks">6 · 7</span><span>D −1 · P −1</span><span class="bucket-count">0</span>
-        </button>
-        <button class="score-button shared" type="button" data-rule="common-8" data-bucket="common-8">
-          <span class="shared-ranks">8</span><span>D +2 · P −2</span><span class="bucket-count">0</span>
-        </button>
-        <button class="score-button shared" type="button" data-rule="common-9" data-bucket="common-9">
-          <span class="shared-ranks">9</span><span>D +2 · P +4</span><span class="bucket-count">0</span>
-        </button>
+      <section class="running-totals" aria-label="Running counts">
+        <div><span class="counter-label">D</span><output id="dragon-total" aria-label="D total" aria-live="polite">0</output></div>
+        <div><span class="counter-label">D detailed</span><output id="dragon-detailed-total" aria-label="Detailed D total" aria-live="polite">0.0</output></div>
+        <div><span class="counter-label">P</span><output id="panda-total" aria-label="P total" aria-live="polite">0</output></div>
       </section>
-
-      <section class="trackers" aria-label="Card counters">
-        <article class="tracker dragon total-only">
-          <div class="tracker-heading">
-            <span class="counter-label">D</span>
-            <output id="dragon-total" aria-label="D total" aria-live="polite">0</output>
+      <section class="input-columns" aria-label="Card inputs">
+        <div class="card-inputs" aria-label="Cards in rank order">
+          <h2>Cards</h2>
+          <p class="card-legend">D current · D+ detailed</p>
+          <div class="card-group">
+            <div class="split-cards"><button class="score-button positive" type="button" data-card data-bucket="ace"><span class="shared-ranks">A</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button><button class="score-button positive" type="button" data-card data-bucket="two"><span class="shared-ranks">2</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button></div>
+            <button class="score-button negative" type="button" data-card data-bucket="panda-three"><span class="shared-ranks">3</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+            <button class="score-button shared" type="button" data-card data-bucket="common-45"><span class="shared-ranks">4 · 5</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
           </div>
-        </article>
-
-        <article class="tracker panda">
-          <div class="tracker-heading">
-            <span class="counter-label">P</span>
-            <output id="panda-total" aria-label="P total" aria-live="polite">0</output>
+          <div class="card-group">
+            <div class="split-cards"><button class="score-button shared" type="button" data-card data-bucket="six"><span class="shared-ranks">6</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button><button class="score-button shared" type="button" data-card data-bucket="seven"><span class="shared-ranks">7</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button></div>
+            <button class="score-button shared" type="button" data-card data-bucket="common-8"><span class="shared-ranks">8</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
+            <button class="score-button shared" type="button" data-card data-bucket="common-9"><span class="shared-ranks">9</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
           </div>
-          <div class="controls panda-controls">
-            <button class="score-button positive" type="button" data-counter="panda" data-change="1" data-bucket="panda-plus-one"><span class="change">+1</span><span>10 · J · Q · K · A · 2</span><span class="bucket-count">0</span></button>
-            <button class="score-button negative" type="button" data-counter="panda" data-change="-2" data-bucket="panda-three"><span class="change">−2</span><span>3</span><span class="bucket-count">0</span></button>
+          <div class="card-group">
+            <button class="score-button positive" type="button" data-card data-bucket="panda-faces"><span class="shared-ranks">10 · J · Q · K</span><span class="card-score"><span class="current-impact"></span><span class="detailed-impact"></span></span><span class="bucket-count" aria-label="Cards entered">0</span><span class="contributions"><span class="current-contribution">D 0</span><span class="detailed-contribution">D+ 0.0</span></span></button>
           </div>
-        </article>
-
-        <article class="tracker deck">
-          <div class="tracker-heading">
-            <output id="deck-total" aria-live="polite">0</output>
-          </div>
+          <p id="legacy-count" class="count-note" hidden></p>
+        </div>
+        <article class="deck" aria-label="Total cards dealt">
+          <div class="tracker-heading"><h2>Cards dealt</h2><output id="deck-total" aria-live="polite">0</output></div>
           <div class="controls">
             <button class="score-button neutral" type="button" data-counter="deck" data-change="1"><span class="change">+1</span></button>
             <button class="score-button neutral" type="button" data-counter="deck" data-change="2"><span class="change">+2</span></button>
@@ -86,6 +74,10 @@
         <div class="deck-stat true-count-stat" id="dragon-true-count-stat">
           <span class="stat-label">D True Count <small>Bet trigger ≥ +4</small></span>
           <output id="dragon-true-count" aria-live="polite">0.00</output>
+        </div>
+        <div class="deck-stat true-count-stat" id="dragon-detailed-true-count-stat">
+          <span class="stat-label">D Detailed True Count <small>Bet trigger ≥ +10</small></span>
+          <output id="dragon-detailed-true-count" aria-live="polite">0.00</output>
         </div>
         <div class="deck-stat true-count-stat" id="panda-true-count-stat">
           <span class="stat-label">P True Count <small>Bet trigger ≥ +11</small></span>

@@ -2,24 +2,44 @@ const storageKey = "card-tracker-v1";
 const historyKey = "card-tracker-history-v2";
 const bucketStorageKey = "card-tracker-bucket-counts-v2";
 const totalDecksStorageKey = "card-tracker-total-decks-v1";
-const sessionDurationStorageKey = "card-tracker-session-duration-v2";
+const sessionDurationStorageKey = "card-tracker-session-duration-v3";
 const totals = JSON.parse(localStorage.getItem(storageKey) || "{\"dragon\":0,\"panda\":0,\"deck\":0}");
 const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
 const bucketCounts = JSON.parse(localStorage.getItem(bucketStorageKey) || "{\"common-45\":0,\"common-67\":0,\"common-8\":0,\"common-9\":0,\"panda-plus-one\":0,\"panda-three\":0}");
 let totalDecks = Number(localStorage.getItem(totalDecksStorageKey) || 8);
-const storedSessionDuration = Number(localStorage.getItem(sessionDurationStorageKey));
-let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Math.max(5, Math.round(storedSessionDuration))) : 20;
+const storedSessionDuration = Number(localStorage.getItem(sessionDurationStorageKey) ?? 25);
+let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Math.max(5, Math.round(storedSessionDuration))) : 25;
 const sessionCardLimit = 6;
 const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null };
 let sessionStatusMessage = "No active card session.";
-const betTriggers = { dragon: 4, panda: 11 };
+const betTriggers = { dragon: 4, dragonDetailed: 10, panda: 11 };
 
-const commonRules = {
-  "common-45": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -2 }],
-  "common-67": [{ counter: "dragon", change: -1 }, { counter: "panda", change: -1 }],
-  "common-8": [{ counter: "dragon", change: 2 }, { counter: "panda", change: -2 }],
-  "common-9": [{ counter: "dragon", change: 2 }, { counter: "panda", change: 4 }]
+// Detailed Dragon values use tenths to avoid accumulating floating-point error.
+// Published System 1: https://wizardofodds.com/games/baccarat/dragon-bet/
+const cardRules = {
+  "ace": { dragon: 0, panda: 1, detailedTenths: 5 },
+  "two": { dragon: 0, panda: 1, detailedTenths: -9 },
+  "panda-three": { dragon: 0, panda: -2, detailedTenths: -11 },
+  "common-45": { dragon: -1, panda: -2, detailedTenths: -27 },
+  "six": { dragon: -1, panda: -1, detailedTenths: -33 },
+  "seven": { dragon: -1, panda: -1, detailedTenths: -36 },
+  "common-8": { dragon: 2, panda: -2, detailedTenths: 54 },
+  "common-9": { dragon: 2, panda: 4, detailedTenths: 48 },
+  "panda-faces": { dragon: 0, panda: 1, detailedTenths: 9 }
 };
+
+function hasUnsplitCards() {
+  return ["panda-plus-one", "panda-a2", "common-67"].some(key => (bucketCounts[key] || 0) > 0);
+}
+
+function detailedDragonTotal() {
+  if (hasUnsplitCards()) return null;
+  return Object.entries(cardRules).reduce((sum, [key, rule]) => sum + (bucketCounts[key] || 0) * rule.detailedTenths, 0) / 10;
+}
+
+function signed(value, decimals = 0) {
+  return `${value > 0 ? "+" : ""}${value.toFixed(decimals)}`;
+}
 
 function setOutput(selector, value) {
   const output = document.querySelector(selector);
@@ -31,6 +51,11 @@ function renderDeckStats() {
   const decksRemaining = Math.max(0, totalDecks - totals.deck / 52);
   const decksRemainingText = decksRemaining.toFixed(2);
   const dTrueCountValue = decksRemaining === 0 ? null : totals.dragon / decksRemaining;
+  const detailedTotal = detailedDragonTotal();
+  const detailedTrueCount = decksRemaining === 0 || detailedTotal === null ? null : detailedTotal / decksRemaining;
+  setOutput("#dragon-detailed-total", detailedTotal === null ? "—" : detailedTotal.toFixed(1));
+  setOutput("#dragon-detailed-true-count", detailedTrueCount === null ? "—" : detailedTrueCount.toFixed(2));
+  document.querySelector("#dragon-detailed-true-count-stat").classList.toggle("trigger-reached", detailedTrueCount !== null && detailedTrueCount >= betTriggers.dragonDetailed);
   const pTrueCountValue = decksRemaining === 0 ? null : totals.panda / decksRemaining;
   const dTrueCount = dTrueCountValue === null ? "—" : dTrueCountValue.toFixed(2);
   const pTrueCount = pTrueCountValue === null ? "—" : pTrueCountValue.toFixed(2);
@@ -48,7 +73,7 @@ function renderSessionControls() {
   document.querySelectorAll(".deck .score-button").forEach((button) => {
     button.disabled = cardSession.active && Number(button.dataset.change) > remaining;
   });
-  document.querySelectorAll(".common-controls .score-button, .panda .score-button").forEach((button) => {
+  document.querySelectorAll(".card-inputs .score-button").forEach((button) => {
     button.disabled = cardSession.active && remaining === 0;
   });
 
@@ -113,8 +138,18 @@ function render() {
     document.querySelector(`#${counter}-total`).textContent = total;
   }
   document.querySelectorAll("[data-bucket]").forEach((button) => {
-    button.querySelector(".bucket-count").textContent = bucketCounts[button.dataset.bucket] || 0;
+    const count = bucketCounts[button.dataset.bucket] || 0;
+    const rule = cardRules[button.dataset.bucket];
+    button.querySelector(".current-impact").textContent = `${rule.dragon === 0 ? "" : `D ${signed(rule.dragon)} · `}P ${signed(rule.panda)}`;
+    button.querySelector(".detailed-impact").textContent = `D+ ${signed(rule.detailedTenths / 10, 1)}`;
+    button.querySelector(".bucket-count").textContent = String(count);
+    button.querySelector(".current-contribution").hidden = rule.dragon === 0;
+    button.querySelector(".current-contribution").textContent = `D ${signed(count * rule.dragon)}`;
+    button.querySelector(".detailed-contribution").textContent = `D+ ${signed(count * rule.detailedTenths / 10, 1)}`;
   });
+  const legacyNote = document.querySelector("#legacy-count");
+  legacyNote.hidden = !hasUnsplitCards();
+  legacyNote.textContent = "Earlier grouped A/2 or 6/7 cards cannot be separated. Current D/P totals are preserved; detailed D is unavailable until you reset all totals for a new shoe.";
   localStorage.setItem(storageKey, JSON.stringify(totals));
   localStorage.setItem(historyKey, JSON.stringify(history));
   localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));
@@ -131,6 +166,9 @@ function applyChanges(changes, buckets = [], sessionCards = 0) {
   changes.forEach(({ counter, change }) => { totals[counter] += change; });
   buckets.forEach((bucket) => { bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1; });
   history.push({ changes, buckets, sessionCards });
+  if (cardSession.active && cardSession.cardCount >= sessionCardLimit) {
+    endCardSession("6 cards recorded · ready for the next hand.");
+  }
   render();
 }
 
@@ -140,20 +178,17 @@ function applyPointCard(changes, buckets = []) {
   return true;
 }
 
-document.querySelectorAll("[data-counter]").forEach((button) => {
+document.querySelectorAll("[data-counter=deck]").forEach((button) => {
   button.addEventListener("click", () => {
     const change = Number(button.dataset.change);
-    const buckets = button.dataset.bucket ? [button.dataset.bucket] : [];
-    if (button.dataset.counter === "deck") {
-      if (recordDeckShortcut(change)) applyChanges([{ counter: "deck", change }], buckets, cardSession.active ? change : 0);
-    }
-    else applyPointCard([{ counter: button.dataset.counter, change }], buckets);
+    if (recordDeckShortcut(change)) applyChanges([{ counter: "deck", change }], [], cardSession.active ? change : 0);
   });
 });
 
-document.querySelectorAll("[data-rule]").forEach((button) => {
+document.querySelectorAll("[data-card]").forEach((button) => {
   button.addEventListener("click", () => {
-    applyPointCard(commonRules[button.dataset.rule], [button.dataset.bucket]);
+    const rule = cardRules[button.dataset.bucket];
+    applyPointCard([{ counter: "dragon", change: rule.dragon }, { counter: "panda", change: rule.panda }], [button.dataset.bucket]);
   });
 });
 
@@ -186,7 +221,7 @@ document.querySelector("#total-decks").addEventListener("input", (event) => {
 });
 
 document.querySelector("#session-duration").addEventListener("change", (event) => {
-  sessionDuration = Math.min(120, Math.max(5, Math.round(Number(event.target.value) || 20)));
+  sessionDuration = Math.min(120, Math.max(5, Math.round(Number(event.target.value) || 25)));
   event.target.value = sessionDuration;
   if (cardSession.active) cardSession.expiresAt = Date.now() + sessionDuration * 1000;
   localStorage.setItem(sessionDurationStorageKey, String(sessionDuration));
