@@ -20,7 +20,8 @@ const cardRules = {
   "ace": { dragon: 0, panda: 1, detailedTenths: 5 },
   "two": { dragon: 0, panda: 1, detailedTenths: -9 },
   "panda-three": { dragon: 0, panda: -2, detailedTenths: -11 },
-  "common-45": { dragon: -1, panda: -2, detailedTenths: -27 },
+  "four": { dragon: -1, panda: -2, detailedTenths: -27 },
+  "five": { dragon: -1, panda: -2, detailedTenths: -27 },
   "six": { dragon: -1, panda: -1, detailedTenths: -33 },
   "seven": { dragon: -1, panda: -1, detailedTenths: -36 },
   "common-8": { dragon: 2, panda: -2, detailedTenths: 54 },
@@ -34,7 +35,7 @@ function hasUnsplitCards() {
 
 function detailedDragonTotal() {
   if (hasUnsplitCards()) return null;
-  return Object.entries(cardRules).reduce((sum, [key, rule]) => sum + (bucketCounts[key] || 0) * rule.detailedTenths, 0) / 10;
+  return Object.entries(cardRules).reduce((sum, [key, rule]) => sum + (bucketCounts[key] || 0) * rule.detailedTenths, -(bucketCounts["common-45"] || 0) * 27) / 10;
 }
 
 function signed(value, decimals = 0) {
@@ -146,6 +147,10 @@ function render() {
   const legacyNote = document.querySelector("#legacy-count");
   legacyNote.hidden = !hasUnsplitCards();
   legacyNote.textContent = "Earlier grouped A/2 or 6/7 cards cannot be separated. Current D/P totals are preserved; detailed D is unavailable until you reset all totals for a new shoe.";
+  const legacy45 = bucketCounts["common-45"] || 0;
+  const legacy45Note = document.querySelector("#legacy-45-count");
+  legacy45Note.hidden = legacy45 === 0;
+  legacy45Note.textContent = `Earlier 4/5 combined: ${legacy45}. Included in D/P and detailed D totals; separate 4/5 counts start from this update.`;
   localStorage.setItem(storageKey, JSON.stringify(totals));
   localStorage.setItem(historyKey, JSON.stringify(history));
   localStorage.setItem(bucketStorageKey, JSON.stringify(bucketCounts));

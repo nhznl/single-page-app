@@ -87,3 +87,9 @@ header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 .card-inputs [data-emphasis] .shared-ranks { font-size: 1.65rem; font-weight: 950; }
 .card-inputs [data-emphasis] .card-score { color: #10231d; font-weight: 800; }
 .card-inputs [data-emphasis] .bucket-count { background: #10231d; border-color: #10231d; }
+
+.three-cards { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
+.three-cards .score-button { flex-direction: column; gap: .05rem; padding: .1rem .1rem 1.4rem; }
+.three-cards .shared-ranks { font-size: 1rem; }
+.three-cards .card-score { font-size: .65rem; text-align: center; gap: .05rem; }
+#legacy-45-count { margin-top: .5rem; }
