@@ -24,7 +24,7 @@ After a card session ends, the status row shows **BANKER**, **PLAYER**, or **SIT
 
 The calculation uses this table's reported rules: Banker pushes on a winning three-card 7 (Dragon), Player pushes on a winning three-card 8 (Panda), other wins pay 1:1, the opposite wager loses, and ties push. The Panda push is an additional table rule, beyond standard EZ Baccarat. EV is expected net return per unit wagered, including pushes, rather than the chance of winning the next hand.
 
-Start tracking at a new shoe and record all removed card values, including burn cards. Check **All removed cards recorded, including burns** in the main-bet panel to enable the comparison. This confirmation persists across reloads and clears on Reset. Quantity-only shortcuts, historical grouped ranks, inconsistent counts, and fewer than six cards remaining withhold the comparison. If a card's value was missed, uncheck the confirmation and restart at the next shoe. Changing the starting deck count must reflect the actual shoe.
+The comparison runs automatically from the recorded card values, assuming tracking started at a new shoe and all removed values, including burns, were entered. Quantity-only shortcuts, historical grouped ranks, inconsistent counts, and fewer than six cards remaining withhold the comparison. If a card's value was missed, restart tracking at the next shoe. Changing the starting deck count must reflect the actual shoe.
 
 The engine enumerates deals without replacement over baccarat point values and applies the standard drawing rules. It runs in a Web Worker and works offline after the assets have been cached. While entering cards (including an unfinished `1` for `10`), returns are hidden. New requests supersede older calculation results.
 

@@ -81,9 +81,8 @@ test('decision compares with sitting out and does not turn smaller losses into r
 });
 
 test('composition validation preserves unknown, grouped, invalid and exhausted states', () => {
-  const input = { decks: 8, dealt: 0, counts: {}, complete: true };
+  const input = { decks: 8, dealt: 0, counts: {} };
   assert.deepEqual(remainingShoe(input).cards, [128,32,32,32,32,32,32,32,32,32]);
-  assert.match(remainingShoe({...input, complete: false}).reason, /Confirm/);
   assert.match(remainingShoe({...input, dealt: 2}).reason, /no rank/);
   assert.match(remainingShoe({...input, dealt: 2, counts: {'common-45': 2}}).reason, /grouped/);
   assert.match(remainingShoe({...input, dealt: 33, counts: {ace: 33}}).reason, /exceeds/);

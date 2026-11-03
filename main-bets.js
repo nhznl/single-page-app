@@ -3,7 +3,7 @@
 
   const buckets = { "panda-faces": 0, ace: 1, two: 2, "panda-three": 3, four: 4, five: 5, six: 6, seven: 7, "common-8": 8, "common-9": 9 };
 
-  function remainingShoe({ decks, dealt, counts, complete }) {
+  function remainingShoe({ decks, dealt, counts }) {
     if (!Number.isInteger(decks) || decks < 1) return { reason: "Use a whole number of starting decks." };
     if (!Number.isInteger(dealt) || dealt < 0) return { reason: "Cards dealt must be a nonnegative whole number." };
     const cards = Array.from({ length: 10 }, (_, value) => decks * (value === 0 ? 16 : 4));
@@ -18,7 +18,6 @@
     if (cards.some(count => count < 0)) return { reason: "A rank exceeds the starting shoe. Check inputs or reset at a new shoe." };
     if (recorded !== dealt) return { reason: dealt > recorded ? `${dealt - recorded} dealt card(s) have no rank. Undo quantity shortcuts or reset at a new shoe.` : "Cards dealt do not match recorded ranks." };
     if (cards.reduce((sum, count) => sum + count, 0) < 6) return { reason: "Fewer than six cards remain. Start a new shoe." };
-    if (!complete) return { reason: "Confirm all removed cards are recorded, including burns." };
     return { cards };
   }
 

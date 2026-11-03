@@ -111,8 +111,6 @@ header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 .main-bet-values output { color: #f8f4e9; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
 .main-bets p { font-size: .75rem; line-height: 1.4; color: #cbd8d0; }
 .main-bets .main-bet-rules { margin: .5rem 0 0; font-size: .65rem; }
-.tracking-confirmation { display: flex; align-items: center; gap: .5rem; min-height: 44px; font-size: .75rem; color: #f8f4e9; }
-.tracking-confirmation input { width: 1.1rem; height: 1.1rem; flex-shrink: 0; accent-color: #69d8bd; }
 .session-status[data-main-bet-state="sit-out"] { border-color: #789287; background: #172a23; color: #f8f4e9; }
 .session-status[data-main-bet-state="banker"], .session-status[data-main-bet-state="player"] { border-color: #69d8bd; background: #1d4537; color: #baf4d7; }
 .main-bets[data-state="banker"] .main-bet-heading output, .main-bets[data-state="player"] .main-bet-heading output { color: #baf4d7; }

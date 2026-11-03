@@ -252,7 +252,7 @@ const keyboardCards = {
 
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
-  if (event.target.closest?.("input:not([type=checkbox]), textarea, select, [contenteditable]")) return;
+  if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
   const key = event.key.toUpperCase();
   if (key === "ENTER") {
     event.preventDefault();
@@ -299,9 +299,6 @@ document.querySelector("#reset").addEventListener("click", () => {
   Object.keys(totals).forEach((key) => { totals[key] = 0; });
   Object.keys(bucketCounts).forEach((key) => { bucketCounts[key] = 0; });
   history.length = 0;
-  trackingComplete = false;
-  localStorage.setItem(trackingCompleteKey, "false");
-  document.querySelector("#tracking-complete").checked = false;
   endCardSession("Session reset.");
   render();
 });
@@ -330,13 +327,10 @@ document.querySelector("#end-session").addEventListener("click", () => {
   endCardSession("Session ended early · ready for the next hand.");
 });
 
-const trackingCompleteKey = "card-tracker-complete-shoe-v1";
-let trackingComplete = localStorage.getItem(trackingCompleteKey) === "true";
 let mainBetWorker = null;
 let mainBetRequestId = 0;
 let mainBetInputKey = null;
 let mainBetView = { phase: "unavailable", result: null, reason: "" };
-document.querySelector("#tracking-complete").checked = trackingComplete;
 
 function showMainBetView(phase, result = null, reason = "") {
   const names = { unavailable: "Insufficient data", calculating: "Calculating…", entering: "Hand in progress", pending: "Finish typing 10", error: "Unavailable", "sit-out": "SIT OUT", banker: "BANKER", player: "PLAYER" };
@@ -364,7 +358,7 @@ function refreshMainBets() {
     showMainBetView(cardSession.active ? "entering" : "pending", null, "Finish entering this hand before comparing the next bets.");
     return;
   }
-  const input = BaccaratMainBets.remainingShoe({ decks: Number(document.querySelector("#total-decks").value), dealt: totals.deck, counts: bucketCounts, complete: trackingComplete });
+  const input = BaccaratMainBets.remainingShoe({ decks: Number(document.querySelector("#total-decks").value), dealt: totals.deck, counts: bucketCounts });
   if (!input.cards) {
     mainBetInputKey = null;
     showMainBetView("unavailable", null, input.reason);
@@ -401,12 +395,6 @@ function refreshMainBets() {
     showMainBetView("error", null, mainBetView.reason);
   }
 }
-
-document.querySelector("#tracking-complete").addEventListener("change", (event) => {
-  trackingComplete = event.target.checked;
-  localStorage.setItem(trackingCompleteKey, String(trackingComplete));
-  refreshMainBets();
-});
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
 render();
