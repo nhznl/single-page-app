@@ -98,3 +98,7 @@ header .end-session { border-color: #71c8ac; background: #28654f; color: #fff; }
 .card-session-line .card-legend { margin: 0; flex-shrink: 0; }
 .session-cards { display: flex; flex: 1; flex-wrap: wrap; justify-content: center; gap: .2rem; min-width: 0; }
 .session-card { display: inline-block; padding: .05rem .25rem; border-radius: .25rem; background: #f4ce67; color: #10231d; font-size: .65rem; font-weight: 900; line-height: 1.2; }
+
+.cards-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem; }
+.cards-heading > span { font-size: .6rem; font-weight: 500; color: #b9cec2; letter-spacing: normal; text-align: right; }
+.pending-card { background: transparent; color: #f4ce67; outline: 1px dashed #f4ce67; }

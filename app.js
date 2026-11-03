@@ -12,6 +12,7 @@ let sessionDuration = Number.isFinite(storedSessionDuration) ? Math.min(120, Mat
 const sessionCardLimit = 6;
 const cardSession = { active: false, cardCount: 0, expiresAt: 0, timerId: null, actions: [] };
 let sessionStatusMessage = "No active card session.";
+let pendingTen = false;
 const betTriggers = { dragon: 4, dragonDetailed: 10, panda: 11 };
 
 // Detailed Dragon values use tenths to avoid accumulating floating-point error.
@@ -70,11 +71,13 @@ function renderDeckStats() {
 function renderSessionCards() {
   const list = document.querySelector("#session-cards");
   const labels = cardSession.active ? cardSession.actions.map(({ label }) => label) : [];
+  if (pendingTen) labels.push("1…");
   if (Array.from(list.children, card => card.textContent).join("|") === labels.join("|")) return;
   list.replaceChildren();
   labels.forEach((label) => {
     const card = document.createElement("span");
-    card.className = "session-card";
+    card.className = label === "1…" ? "session-card pending-card" : "session-card";
+    if (label === "1…") card.title = "Type 0 to record 10; 1 alone does not count.";
     card.textContent = label;
     list.append(card);
   });
@@ -110,6 +113,7 @@ function endCardSession(message = "No active card session.") {
   cardSession.cardCount = 0;
   cardSession.expiresAt = 0;
   cardSession.actions.length = 0;
+  pendingTen = false;
   sessionStatusMessage = message;
   renderSessionControls();
 }
@@ -124,6 +128,7 @@ function updateSessionCountdown() {
 }
 
 function startCardSession() {
+  updateSessionCountdown();
   if (cardSession.active && cardSession.cardCount >= sessionCardLimit) return false;
   if (!cardSession.active) {
     cardSession.active = true;
@@ -179,14 +184,14 @@ function render() {
   document.querySelector("#undo").disabled = history.length === 0;
 }
 
-function applyChanges(changes, buckets = [], sessionCards = 0) {
+function applyChanges(changes, buckets = [], sessionCards = 0, cardLabel = null) {
   changes.forEach(({ counter, change }) => { totals[counter] += change; });
   buckets.forEach((bucket) => { bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1; });
   const action = { changes, buckets, sessionCards };
   history.push(action);
   if (cardSession.active && sessionCards > 0) {
     const button = buckets.length ? document.querySelector(`[data-bucket="${buckets[0]}"]`) : null;
-    const label = button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${sessionCards}`;
+    const label = cardLabel ?? (button ? button.querySelector(".shared-ranks").textContent.replaceAll(" · ", "/") : `+${sessionCards}`);
     cardSession.actions.push({ action, label });
   }
   if (cardSession.active && cardSession.cardCount >= sessionCardLimit) {
@@ -195,27 +200,34 @@ function applyChanges(changes, buckets = [], sessionCards = 0) {
   render();
 }
 
-function applyPointCard(changes, buckets = []) {
+function applyPointCard(changes, buckets = [], cardLabel = null) {
   if (!startCardSession()) return false;
-  applyChanges([...changes, { counter: "deck", change: 1 }], buckets, 1);
+  applyChanges([...changes, { counter: "deck", change: 1 }], buckets, 1, cardLabel);
   return true;
 }
 
 document.querySelectorAll("[data-counter=deck]").forEach((button) => {
   button.addEventListener("click", () => {
     const change = Number(button.dataset.change);
-    if (recordDeckShortcut(change)) applyChanges([{ counter: "deck", change }], [], cardSession.active ? change : 0);
+    if (recordDeckShortcut(change)) {
+      pendingTen = false;
+      applyChanges([{ counter: "deck", change }], [], cardSession.active ? change : 0);
+    }
   });
 });
+
+function recordCard(bucket, label = null) {
+  pendingTen = false;
+  const rule = cardRules[bucket];
+  return applyPointCard([{ counter: "dragon", change: rule.dragon }, { counter: "panda", change: rule.panda }], [bucket], label);
+}
 
 document.querySelectorAll("[data-card]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const rule = cardRules[button.dataset.bucket];
-    applyPointCard([{ counter: "dragon", change: rule.dragon }, { counter: "panda", change: rule.panda }], [button.dataset.bucket]);
-  });
+  button.addEventListener("click", () => recordCard(button.dataset.bucket));
 });
 
-document.querySelector("#undo").addEventListener("click", () => {
+function undoLastAction() {
+  pendingTen = false;
   const lastAction = history.pop();
   if (!lastAction) return;
   const changes = lastAction.changes || [{ counter: lastAction.counter, change: lastAction.change }];
@@ -226,6 +238,51 @@ document.querySelector("#undo").addEventListener("click", () => {
     cardSession.cardCount = Math.max(0, cardSession.cardCount - lastAction.sessionCards);
   }
   render();
+}
+
+document.querySelector("#undo").addEventListener("click", undoLastAction);
+
+const keyboardCards = {
+  A: "ace", "2": "two", "3": "panda-three", "4": "four", "5": "five",
+  "6": "six", "7": "seven", "8": "common-8", "9": "common-9",
+  J: "panda-faces", Q: "panda-faces", K: "panda-faces"
+};
+
+document.addEventListener("keydown", (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+  if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
+  const key = event.key.toUpperCase();
+  if (key === "BACKSPACE" || key === "DELETE") {
+    event.preventDefault();
+    updateSessionCountdown();
+    if (pendingTen) {
+      pendingTen = false;
+      renderSessionCards();
+    } else if (cardSession.active && cardSession.actions.at(-1)?.action === history.at(-1)) {
+      undoLastAction();
+    }
+    return;
+  }
+  if (key === "1") {
+    event.preventDefault();
+    updateSessionCountdown();
+    pendingTen = true;
+    renderSessionCards();
+    return;
+  }
+  if (key === "0") {
+    event.preventDefault();
+    updateSessionCountdown();
+    if (pendingTen) recordCard("panda-faces", "10");
+    return;
+  }
+  if (keyboardCards[key]) {
+    event.preventDefault();
+    recordCard(keyboardCards[key], key);
+  } else if (key.length === 1 && pendingTen) {
+    pendingTen = false;
+    renderSessionCards();
+  }
 });
 
 document.querySelector("#reset").addEventListener("click", () => {
