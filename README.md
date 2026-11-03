@@ -20,7 +20,7 @@ The counters work offline once the page has been opened online at least once.
 
 ## Next-hand main-bet comparison
 
-After a card session ends, the status row shows **BANKER**, **PLAYER**, or **SIT OUT**. The panel below the true counts shows both expected returns. A side is recommended only when its expected return is positive; otherwise the recommendation is to sit out the main bets. Dragon/Panda side-bet signals remain separate.
+After a card session ends, the status row shows **BANKER**, **PLAYER**, or **SIT OUT**. The compact panel above the cards shows both expected returns and any reason the comparison is unavailable. A side is recommended only when its expected return is positive; otherwise the recommendation is to sit out the main bets. Dragon/Panda side-bet signals remain separate.
 
 The calculation uses this table's reported rules: Banker pushes on a winning three-card 7 (Dragon), Player pushes on a winning three-card 8 (Panda), other wins pay 1:1, the opposite wager loses, and ties push. The Panda push is an additional table rule, beyond standard EZ Baccarat. EV is expected net return per unit wagered, including pushes, rather than the chance of winning the next hand.
 
@@ -39,3 +39,5 @@ node --test tests/main-bets.test.cjs
 These compare the full eight-deck probabilities with the published combination counts, compare varied small shoes with independent exhaustive enumeration of physical cards, and check positive/negative/zero recommendations and input coverage.
 
 References: [baccarat drawing rules](https://wizardofodds.com/games/baccarat/), [published eight-deck outcome counts](https://wizardofodds.com/games/ez-baccarat/).
+
+Runtime script/style URLs, the calculator worker imports, and the service-worker cache share a release version. Update them together when releasing asset changes. The tests check this contract so old cached calculator code cannot retain a removed input requirement.

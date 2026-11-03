@@ -343,9 +343,10 @@ function showMainBetView(phase, result = null, reason = "") {
     setOutput(`#${side}-ev`, result ? (Math.abs(result[side]) <= 1e-12 ? "0.000%" : `${signed(result[side] * 100, 3)}%`) : "—");
     document.querySelector(`#${side}-ev-stat`).classList.toggle("positive-edge", Boolean(result && result[side] > 1e-12));
   }
-  const explanation = result ? (state === "sit-out" ? "Neither main bet has a positive expected return. Sitting out returns 0%." : `${choice} has a positive expected return; an individual hand can still lose.`) : reason;
+  const explanation = result ? (state === "sit-out" ? "Neither main bet has a positive expected return." : "Positive expected return; no guaranteed win.") : reason;
   document.querySelector("#main-bet-reason").textContent = explanation;
   const status = document.querySelector("#session-status");
+  status.hidden = !cardSession.active;
   status.dataset.mainBetState = state;
   if (!cardSession.active) {
     status.textContent = result ? `Main bets: ${choice}${state === "sit-out" ? " · No positive edge" : " · Positive edge"}` : `Main bets: ${choice}`;
@@ -375,7 +376,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js");
+      mainBetWorker = new Worker("main-bets-worker.js?v=35");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };

@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=35" />
     <title>Card Tracker</title>
   </head>
   <body>
@@ -24,6 +24,15 @@
         <button class="reset" id="reset" type="button">Reset all totals</button>
       </header>
       <p class="session-status" id="session-status" aria-live="polite">No active card session.</p>
+
+      <section class="main-bets" id="main-bets" aria-label="Next-hand main-bet recommendation">
+        <div class="main-bet-heading"><h2>Next hand · main bets</h2><output id="main-bet-choice" aria-live="polite">Insufficient data</output></div>
+        <div class="main-bet-values">
+          <div id="banker-ev-stat"><span>Banker EV</span><output id="banker-ev">—</output></div>
+          <div id="player-ev-stat"><span>Player EV</span><output id="player-ev">—</output></div>
+        </div>
+        <p id="main-bet-reason" aria-live="polite"></p>
+      </section>
 
       <section class="card-inputs" aria-label="Cards in rank order">
         <h2 class="cards-heading">Cards <span>Type cards · Delete undo · Enter end</span></h2>
@@ -83,18 +92,13 @@
         </div>
         <p class="count-note">Running counts can be negative. Triggers are reference points for the published 8-deck systems, not guarantees.</p>
       </section>
-      <section class="main-bets" id="main-bets" aria-label="Next-hand main-bet recommendation">
-        <div class="main-bet-heading"><h2>Next hand · main bets</h2><output id="main-bet-choice" aria-live="polite">Insufficient data</output></div>
-        <div class="main-bet-values">
-          <div id="banker-ev-stat"><span>Banker EV</span><output id="banker-ev">—</output></div>
-          <div id="player-ev-stat"><span>Player EV</span><output id="player-ev">—</output></div>
-        </div>
-        <p id="main-bet-reason" aria-live="polite"></p>
+
+      <aside class="main-bet-notes" aria-label="Main-bet calculation rules">
         <p class="main-bet-rules">Your table: Dragon pushes Banker; Panda pushes Player. Other wins pay 1:1; opposite bets lose; ties push.</p>
         <p class="main-bet-rules">Expected return per wager, not a prediction. Dragon/Panda side bets are separate.</p>
-      </section>
+      </aside>
     </main>
-    <script src="main-bets.js"></script>
-    <script src="app.js"></script>
+    <script src="main-bets.js?v=35"></script>
+    <script src="app.js?v=35"></script>
   </body>
 </html>
