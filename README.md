@@ -22,6 +22,10 @@ The counters work offline once the page has been opened online at least once.
 
 Tap card buttons on mobile. With a physical keyboard, enter A, 2–9, 10, J, Q, or K; lowercase works too. Keyboard entry and card taps share one session. `10` counts as one card; an unfinished `1` waits for `0`. Backspace/Delete removes the latest active-session entry, and Enter ends the session. **End Session** and **Undo** are beside the Cards heading. Cards dealt shortcuts are at the bottom of the page.
 
+## Dragon counting practice
+
+Open **Practice** to deal a shuffled 52-card deck one card at a time. Track cards and the simple Dragon running count yourself; **Reveal counts** shows the running and true counts, card total and dealt-card list. The +4 indicator is a reference from an eight-deck system, not a guarantee for a single deck. **New deck** starts a fresh shuffle. Practice progress is saved on this device and does not affect the tracker or session history.
+
 ## Session history and research export
 
 Open **Session history** to see each session's cards in entry order. **Reset all totals** freezes that list and begins a new one; choose an older frozen list from the selector to review it. Session entries survive reloads. A session interrupted by reloading is labeled accordingly. Undo keeps a crossed-out entry and an audit trail rather than erasing the original input.

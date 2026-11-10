@@ -410,7 +410,7 @@ function refreshMainBets() {
   showMainBetView(mainBetView.phase, null, mainBetView.reason);
   try {
     if (!mainBetWorker) {
-      mainBetWorker = new Worker("main-bets-worker.js?v=44");
+      mainBetWorker = new Worker("main-bets-worker.js?v=45");
       mainBetWorker.onmessage = ({ data }) => {
         if (data.id !== mainBetRequestId || mainBetInputKey === null || cardSession.active || pendingTen) return;
         mainBetView = data.error ? { phase: "error", result: null, reason: data.error } : { phase: "ready", result: data.result, reason: "" };
@@ -563,23 +563,25 @@ function renderResearch() {
   shoe.qualityNotes.forEach(note => appendResearchText(list, "li", note, "research-meta"));
 }
 
-function selectView(research) {
-  document.querySelector("#tracker-panel").hidden = research;
-  document.querySelector("#research-panel").hidden = !research;
-  document.querySelector("#tracker-tab").setAttribute("aria-selected", String(!research));
-  document.querySelector("#tracker-tab").tabIndex = research ? -1 : 0;
-  document.querySelector("#research-tab").tabIndex = research ? 0 : -1;
-  document.querySelector("#research-tab").setAttribute("aria-selected", String(research));
+const views = ["tracker", "practice", "research"];
+function selectView(view) {
+  views.forEach(name => {
+    const selected = name === view;
+    document.querySelector(`#${name}-panel`).hidden = !selected;
+    const tab = document.querySelector(`#${name}-tab`);
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  });
   renderResearch();
 }
-document.querySelector("#tracker-tab").addEventListener("click", () => selectView(false));
-document.querySelector("#research-tab").addEventListener("click", () => selectView(true));
+views.forEach(view => document.querySelector(`#${view}-tab`).addEventListener("click", () => selectView(view)));
 document.querySelector(".view-tabs").addEventListener("keydown", event => {
   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
-  const research = event.key === "End" || (event.key !== "Home" && document.querySelector("#research-panel").hidden);
-  selectView(research);
-  document.querySelector(research ? "#research-tab" : "#tracker-tab").focus();
+  const active = views.findIndex(name => document.querySelector(`#${name}-tab`).getAttribute("aria-selected") === "true");
+  const next = event.key === "Home" ? 0 : event.key === "End" ? views.length - 1 : (active + (event.key === "ArrowRight" ? 1 : -1) + views.length) % views.length;
+  selectView(views[next]);
+  document.querySelector(`#${views[next]}-tab`).focus();
 });
 document.querySelector("#research-shoe").addEventListener("change", renderResearch);
 document.querySelector("#export-research").addEventListener("click", () => {

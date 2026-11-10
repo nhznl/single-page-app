@@ -140,3 +140,23 @@ s.research-card { opacity: .55; }
 .main-bet-settings { display: flex; gap: .5rem; margin-top: .4rem; }
 .main-bet-settings label { display: flex; align-items: center; flex: 1; min-width: 0; gap: .3rem; color: #cbd8d0; font-size: .75rem; font-weight: 700; }
 .main-bet-settings input { width: 100%; min-width: 0; min-height: 36px; padding: .3rem; border: 1px solid #789287; border-radius: .4rem; background: #10231d; color: #f8f4e9; font-size: 16px; }
+
+.view-tabs button { min-width: 0; padding-inline: .25rem; font-size: .78rem; }
+.practice-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.practice-heading button, .practice-actions button { min-height: 48px; border: 1px solid #789287; border-radius: .65rem; background: #172a23; color: #f8f4e9; padding: .6rem .8rem; font: inherit; font-weight: 800; touch-action: manipulation; }
+.practice-instructions { color: #cbd8d0; text-align: center; font-size: .85rem; }
+.practice-card { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 152px; height: 206px; margin: 1rem auto; border: 2px solid #e5d8b7; border-radius: .9rem; background: #fffaf0; color: #172a23; font-size: 4rem; font-weight: 900; line-height: 1; box-shadow: 0 .35rem 1.2rem rgb(0 0 0 / .25); }
+.practice-card.red-suit { color: #b42e3a; }
+.practice-card #practice-suit { font-size: 3.5rem; }
+.practice-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.practice-actions #practice-next { background: #28654f; border-color: #71c8ac; }
+.practice-actions button:disabled { opacity: .5; }
+.practice-details { margin-top: .8rem; padding: .75rem; border: 1px solid #45695b; border-radius: .75rem; background: #172a23; }
+#practice-details[hidden] { display: none; }
+.practice-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+.practice-stats div { display: flex; flex-direction: column; gap: .3rem; text-align: center; color: #cbd8d0; font-size: .68rem; }
+.practice-stats strong { color: #f4ce67; font-size: 1.2rem; }
+#practice-indicator { text-align: center; font-weight: 800; }
+.practice-note, .practice-details details { color: #cbd8d0; font-size: .75rem; line-height: 1.4; }
+.practice-details summary { min-height: 44px; padding-top: .75rem; cursor: pointer; }
+#practice-cards { overflow-wrap: anywhere; }

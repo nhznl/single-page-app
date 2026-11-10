@@ -9,13 +9,14 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=44" />
+    <link rel="stylesheet" href="styles.css?v=45" />
     <title>Card Tracker</title>
   </head>
   <body>
     <main class="app-shell">
       <nav class="view-tabs" role="tablist" aria-label="Tracker views">
         <button id="tracker-tab" type="button" role="tab" aria-selected="true" aria-controls="tracker-panel">Tracker</button>
+        <button id="practice-tab" type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="practice-panel">Practice</button>
         <button id="research-tab" type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="research-panel">Session history</button>
       </nav>
       <p id="research-error" class="research-error" role="alert" hidden></p>
@@ -110,6 +111,19 @@
           </div>
         </article>
       </section>
+      <section id="practice-panel" role="tabpanel" aria-labelledby="practice-tab" hidden>
+        <div class="practice-heading"><h2>Dragon practice</h2><button id="practice-reset" type="button">New deck</button></div>
+        <p class="practice-instructions">4–7: −1 &nbsp;·&nbsp; 8–9: +2 &nbsp;·&nbsp; others: 0</p>
+        <div class="practice-card" id="practice-card" role="img" aria-label="No card dealt"><span id="practice-rank">?</span><span id="practice-suit"></span></div>
+        <div class="practice-actions"><button id="practice-next" type="button">Next card</button><button id="practice-reveal" type="button" aria-controls="practice-details" aria-expanded="false">Reveal counts</button></div>
+        <p id="practice-save-error" class="research-error" role="alert" hidden>Practice progress could not be saved on this device.</p>
+        <section id="practice-details" class="practice-details" hidden aria-label="Practice counts">
+          <div class="practice-stats"><div><span>Cards shown</span><strong id="practice-shown"></strong></div><div><span>Running count</span><strong id="practice-running"></strong></div><div><span>True count</span><strong id="practice-true"></strong></div></div>
+          <p id="practice-indicator"></p>
+          <p class="practice-note">+4 is an eight-deck reference trigger; this single deck is for practice.</p>
+          <details><summary>Cards shown</summary><p id="practice-cards"></p></details>
+        </section>
+      </section>
       <section id="research-panel" role="tabpanel" aria-labelledby="research-tab" hidden>
         <div class="research-toolbar"><h2>Session history</h2><button id="export-research" type="button">Export JSON</button></div>
         <label class="research-picker" for="research-shoe">List <select id="research-shoe"></select></label>
@@ -118,8 +132,9 @@
         <ol id="research-sessions"></ol>
       </section>
     </main>
-    <script src="main-bets.js?v=44"></script>
-    <script src="research-history.js?v=44"></script>
-    <script src="app.js?v=44"></script>
+    <script src="main-bets.js?v=45"></script>
+    <script src="research-history.js?v=45"></script>
+    <script src="app.js?v=45"></script>
+    <script src="practice.js?v=45"></script>
   </body>
 </html>
