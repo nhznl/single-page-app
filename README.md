@@ -24,7 +24,7 @@ Tap card buttons on mobile. With a physical keyboard, enter A, 2–9, 10, J, Q, 
 
 ## Dragon counting practice
 
-Open **Practice** to deal a shuffled 52-card deck one card at a time. Track cards and the simple Dragon running count yourself; **Reveal counts** shows the running and true counts, card total and dealt-card list. The +4 indicator is a reference from an eight-deck system, not a guarantee for a single deck. **New deck** starts a fresh shuffle. Practice progress is saved on this device and does not affect the tracker or session history.
+Open **Practice** to deal complete Baccarat hands from a shuffled eight-deck shoe. Player and Banker draw according to the Baccarat drawing rules, so each hand contains four to six cards. Track cards and the simple Dragon running count yourself; **Reveal counts** shows the running and true counts, card total and dealt-card list. The +4 indicator is a reference trigger, not a guarantee. **New shoe** starts a fresh shuffle. Practice ends when fewer than six cards remain. Progress is saved on this device and does not affect the tracker or session history.
 
 ## Session history and research export
 

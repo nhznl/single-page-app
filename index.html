@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Cards" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=46" />
+    <link rel="stylesheet" href="styles.css?v=47" />
     <title>Card Tracker</title>
   </head>
   <body>
@@ -112,15 +112,18 @@
         </article>
       </section>
       <section id="practice-panel" role="tabpanel" aria-labelledby="practice-tab" hidden>
-        <div class="practice-heading"><h2>Dragon practice</h2><button id="practice-reset" type="button">New deck</button></div>
+        <div class="practice-heading"><h2>Dragon practice</h2><button id="practice-reset" type="button">New shoe</button></div>
         <p class="practice-instructions">4–7: −1 &nbsp;·&nbsp; 8–9: +2 &nbsp;·&nbsp; others: 0</p>
-        <div class="practice-card" id="practice-card" role="img" aria-label="No card dealt"><span id="practice-rank">?</span><span id="practice-suit"></span></div>
-        <div class="practice-actions"><button id="practice-next" type="button">Next card</button><button id="practice-reveal" type="button" aria-controls="practice-details" aria-expanded="false">Reveal counts</button></div>
+        <div class="practice-hands" aria-live="polite">
+          <div class="practice-hand"><h3>Player</h3><div id="practice-player" class="practice-card-row">Ready to deal</div></div>
+          <div class="practice-hand"><h3>Banker</h3><div id="practice-banker" class="practice-card-row">Ready to deal</div></div>
+        </div>
+        <div class="practice-actions"><button id="practice-next" type="button">Next hand</button><button id="practice-reveal" type="button" aria-controls="practice-details" aria-expanded="false">Reveal counts</button></div>
         <p id="practice-save-error" class="research-error" role="alert" hidden>Practice progress could not be saved on this device.</p>
         <section id="practice-details" class="practice-details" hidden aria-label="Practice counts">
           <div class="practice-stats"><div><span>Cards shown</span><strong id="practice-shown"></strong></div><div><span>Running count</span><strong id="practice-running"></strong></div><div><span>True count</span><strong id="practice-true"></strong></div></div>
           <p id="practice-indicator"></p>
-          <p class="practice-note">+4 is an eight-deck reference trigger; this single deck is for practice.</p>
+          <p class="practice-note">+4 is a reference trigger for the Dragon side bet, not a guarantee.</p>
           <details><summary>Cards shown</summary><p id="practice-cards"></p></details>
         </section>
       </section>
@@ -132,9 +135,9 @@
         <ol id="research-sessions"></ol>
       </section>
     </main>
-    <script src="main-bets.js?v=46"></script>
-    <script src="research-history.js?v=46"></script>
-    <script src="app.js?v=46"></script>
-    <script src="practice.js?v=46"></script>
+    <script src="main-bets.js?v=47"></script>
+    <script src="research-history.js?v=47"></script>
+    <script src="app.js?v=47"></script>
+    <script src="practice.js?v=47"></script>
   </body>
 </html>
